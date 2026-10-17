@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MeowLauncher</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <!-- Custom title bar (frameless window) -->
+      <header class="titlebar">
+        <div class="titlebar-left">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" width="26" height="26">
+              <defs>
+                <linearGradient id="mg" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#ff7ac6" />
+                  <stop offset="100%" stop-color="#7a7dff" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M6 9c0-1.5 1.6-2.4 2.9-1.7l3.6 1.9c.9.5 2 .5 2.9 0l3.6-1.9C20.4 6.6 22 7.5 22 9v11.5c0 2.5-2 4.5-4.5 4.5h-7C8 25 6 23 6 20.5V9z"
+                fill="url(#mg)"
+              />
+              <circle cx="10.5" cy="14" r="1.6" fill="#0b0d12" />
+              <circle cx="17.5" cy="14" r="1.6" fill="#0b0d12" />
+              <path d="M14 18.6l-1.6 2.2h3.2L14 18.6z" fill="#0b0d12" />
+            </svg>
+          </div>
+          <span class="brand-name">MeowLauncher</span>
+          <span class="pill" id="title-version">…</span>
+        </div>
+        <div class="titlebar-right no-drag">
+          <button class="win-btn" id="btn-min" title="最小化">—</button>
+          <button class="win-btn" id="btn-max" title="最大化">▢</button>
+          <button class="win-btn danger" id="btn-close" title="关闭">✕</button>
+        </div>
+      </header>
+
+      <div class="body">
+        <nav class="sidebar">
+          <button class="nav-item active" data-view="home"><span>▶</span>启动</button>
+          <button class="nav-item" data-view="versions"><span>▤</span>版本</button>
+          <button class="nav-item" data-view="settings"><span>⚙</span>设置</button>
+          <button class="nav-item" data-view="logs"><span>≡</span>日志</button>
+          <button class="nav-item" data-view="about"><span>ⓘ</span>关于</button>
+          <div class="sidebar-foot">
+            <span id="channel-badge" class="pill subtle">beta</span>
+          </div>
+        </nav>
+
+        <main class="content">
+          <!-- Home -->
+          <section class="view active" id="view-home">
+            <div class="hero card">
+              <div class="hero-text">
+                <p class="eyebrow">MEOWLAUNCHER 26</p>
+                <h1 id="hero-title">准备就绪</h1>
+                <p class="muted" id="hero-sub">选择游戏目录后即可启动。</p>
+              </div>
+              <button class="launch-btn" id="btn-launch">启动游戏</button>
+            </div>
+
+            <div class="grid-2">
+              <div class="card">
+                <h2>当前版本</h2>
+                <div class="kv" id="home-version">
+                  <span class="k">未配置</span><span class="v">—</span>
+                </div>
+                <div class="actions">
+                  <button class="btn ghost" id="btn-rescan">重新扫描版本</button>
+                  <button class="btn ghost" id="btn-stop">结束游戏</button>
+                </div>
+              </div>
+              <div class="card">
+                <h2>运行状态</h2>
+                <div class="kv"><span class="k">进程</span><span class="v" id="run-state">未运行</span></div>
+                <div class="kv"><span class="k">本版启动器</span><span class="v" id="home-launcher-version">—</span></div>
+                <div class="kv"><span class="k">Electron</span><span class="v" id="home-electron">—</span></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2>最新日志</h2>
+              <pre class="log-box" id="home-log">（无）</pre>
+            </div>
+          </section>
+
+          <!-- Versions -->
+          <section class="view" id="view-versions">
+            <div class="card">
+              <h2>已发现的版本</h2>
+              <p class="muted">扫描目录：<code id="versions-root">未配置</code></p>
+              <div id="versions-list" class="version-list"></div>
+            </div>
+          </section>
+
+          <!-- Settings -->
+          <section class="view" id="view-settings">
+            <div class="card">
+              <h2>游戏</h2>
+              <label class="field">
+                <span>游戏根目录</span>
+                <div class="input-row">
+                  <input id="set-root" type="text" placeholder="例如 C:\Games\Client" />
+                  <button class="btn" id="btn-pick-root">选择…</button>
+                </div>
+              </label>
+              <label class="field">
+                <span>可执行文件（相对版本目录）</span>
+                <input id="set-exe" type="text" placeholder="game.exe" />
+              </label>
+              <label class="field">
+                <span>启动参数模板（支持 {root} {version} {account} {channel}）</span>
+                <textarea id="set-args" rows="3"></textarea>
+              </label>
+            </div>
+
+            <div class="card">
+              <h2>启动器</h2>
+              <label class="field">
+                <span>更新频道</span>
+                <select id="set-channel">
+                  <option value="dev">dev</option>
+                  <option value="snapshot">snapshot</option>
+                  <option value="beta">beta</option>
+                  <option value="stable">stable</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>更新清单地址（本地路径或 https URL）</span>
+                <input id="set-manifest" type="text" placeholder="https://…/channel-beta.json" />
+              </label>
+              <div class="actions">
+                <button class="btn primary" id="btn-save">保存设置</button>
+                <button class="btn ghost" id="btn-check-update">检查更新</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Logs -->
+          <section class="view" id="view-logs">
+            <div class="card">
+              <h2>运行日志</h2>
+              <div class="actions"><button class="btn ghost" id="btn-refresh-log">刷新</button></div>
+              <pre class="log-box tall" id="full-log">（无）</pre>
+            </div>
+          </section>
+
+          <!-- About -->
+          <section class="view" id="view-about">
+            <div class="card about">
+              <h2>MeowLauncher 26.X.X <span class="pill subtle">Beta</span></h2>
+              <p class="muted">
+                基于官方启动器运行时（Electron）重建的自有启动器。应用层完全自研；运行时来自官方安装包解包结果，
+                详见 <code>docs/01-官方启动器解包报告.md</code>。
+              </p>
+              <div class="kv"><span class="k">版本</span><span class="v" id="about-version">—</span></div>
+              <div class="kv"><span class="k">版本线</span><span class="v" id="about-line">—</span></div>
+              <div class="kv"><span class="k">快照</span><span class="v" id="about-snapshot">—</span></div>
+              <div class="kv"><span class="k">频道</span><span class="v" id="about-channel">—</span></div>
+              <div class="kv"><span class="k">构建时间</span><span class="v" id="about-built">—</span></div>
+              <div class="kv"><span class="k">Electron / Chrome / Node</span><span class="v" id="about-runtime">—</span></div>
+              <div class="kv"><span class="k">安装目录</span><span class="v mono" id="about-exedir">—</span></div>
+              <div class="kv"><span class="k">数据目录</span><span class="v mono" id="about-datadir">—</span></div>
+            </div>
+          </section>
+        </main>
+      </div>
+
+      <footer class="statusbar">
+        <span id="status-text">就绪</span>
+        <span class="spacer"></span>
+        <span id="status-runtime">…</span>
+      </footer>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+    <script src="app.js" defer></script>
+  </body>
+</html>

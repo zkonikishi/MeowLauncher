@@ -1,0 +1,32 @@
+{
+    "source":  "<official-launcher>\\resources\\app.asar -\u003e dist/main/renderer/assets",
+    "note":  "Official launcher UI assets reused as visual reference for MeowLauncher 26 beta. No official JS code is included.",
+    "files":  [
+                  "bg-default-Bg1qvOgr.jpg",
+                  "app-logo-login-mqasHnSv.png",
+                  "icon-game-CV88KfYI.ico",
+                  "bg-button-login-large-CtbQl0Uk.png",
+                  "bg-button-login-large-hover-wQoJw7qg.png",
+                  "login_button_bg-MHejY6lj.png",
+                  "login_button_hover_bg-DcqznK4G.png",
+                  "bg-button-primary-C9wSRp7U.png",
+                  "bg-button-secondary-ZHuAnmQP.png",
+                  "button-bottom-right-bg-C_bPzHtD.png",
+                  "bg-news-DJGUAJ_B.png",
+                  "bg-button-middle-login-CenHat9y.png",
+                  "bg-button-middle-login-hover-DiCGHMSy.png",
+                  "login-button-second-bg-Dngby_ZX.png",
+                  "login-icon-qq-D3Xvxet6.png",
+                  "login-icon-qq-active-BgGQHP68.png",
+                  "login-icon-wechat-active-DS94ztCV.png",
+                  "icon-update-DWwagdGT.png",
+                  "icon-no-update-DjO--FDv.png",
+                  "icon-checking-CpdZ2fD0.png",
+                  "icon-toolbox-wrench-NIwi5Nqa.svg",
+                  "icon-notification-game-BQDOMy3J.png",
+                  "icon-modal-empty-CQW-OXei.png",
+                  "top-bar-window-icon-refresh-BO1kVs7v.png",
+                  "icon-predownload-bg-BRuIj0uO.png",
+                  "icon-collection-header-CqPWxZDl.png"
+              ]
+}

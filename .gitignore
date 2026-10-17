@@ -1,0 +1,16 @@
+node_modules/
+dist/
+out/
+*.log
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.key
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
