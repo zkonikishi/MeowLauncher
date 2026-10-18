@@ -1,41 +1,24 @@
-# MeowLauncher 26.X
+# MeowLauncher Beta
 
-MeowLauncher 26.X 是面向 **115 版本客户端** 的启动器主线：Electron 主进程 + React/Vite 渲染层。界面结构参考官方启动器解包结果，应用层完全自研；不加载、不执行任何官方客户端代码。
+通用版 Windows 游戏启动器。作者：**zkonikishi**。
 
-当前版本：**26.1.0 Beta**（line `26.1`，snapshot `26w42a`，codename `Dolphin`，Electron `31.7.5`）。
+官网与项目主页：[GitHub 项目](https://github.com/zkonikishi/MeowLauncher)。自定义版 **MeowLauncher Max** 的官网为 https://mrad.meowopia.com。
 
-> 状态：Beta 主线首版，版本管理 / 启动 / 设置 / 日志骨架已就绪；账号、更新、服务端卡片仍在迭代。本仓库不包含游戏客户端、服务端程序或游戏资源。
+## 分支
 
-## 结构
+- `main`：Electron / React 主线。现有源码包含早期26.1.0历史基线，不代表最新本地候选已同步。
+- `Tauri`：保留此前已脱敏公开的通用版 Rust / Tauri 2 源码，不能当作Max自定义版。
 
-| 路径 | 内容 |
-| --- | --- |
-| `src/main/` | Electron 主进程：`index.mjs` + `modules/{config,game,ipc,logger,updater,version,window}.mjs` |
-| `src/preload/` | 预加载脚本（contextBridge，`preload.cjs`） |
-| `src/renderer/` | 备用渲染层（`ui/` 未构建时回退） |
-| `ui/` | React + Vite 渲染层（开发用 `npm run dev`，构建输出 `dist/ui`） |
-| `version.json` | 版本清单（line / version / channel / snapshot / codename / electron） |
-| `tools/extract-asar.ps1` | 官方启动器 asar 解包辅助脚本（仅调研用，不分发官方代码） |
+## 开发版本
 
-## 运行与构建
+下一共同开发目标：**MeowLauncher Beta · 26.3-snapshot-1**，尚未发布。
 
-要求 Node.js 20+。
+命名顺序：`26.3-snapshot-1` → `26.3-pre-1` → `26.3-rc-1` → `26.3`；各阶段编号递增，正式补丁如 `26.3.1`。Beta是产品名，不是发布阶段。旧版本记录原样保留。
 
-```bash
-cd ui
-npm install
-npm run dev      # 开发：Vite 静态服务（默认 5273），主进程用 MEOW_DEV_SERVER 或 --dev-server 指向它
-npm run build    # 构建渲染层到 dist/ui
-```
+## 构建与范围
 
-主进程：`node src/main/index.mjs`（或在 Electron 运行时内启动）。渲染层解析顺序：`MEOW_DEV_SERVER` / `--dev-server=` → `ui/index.html` → `src/renderer/index.html`。
+Electron主线使用Node.js 20+，渲染层在`ui`目录安装锁定依赖并构建；Tauri分支使用Rust/Tauri/WebView2，请以该分支Cargo工作区及构建脚本为准。运行环境版本与产品版本分别记录。
 
-## 版本方案
+通用版由服主配置服务器与账号服务。尚未完成的新框架共享、真实游戏下载/启动及自动更新应用，不因源码上传而视为验收通过。多开开发保持暂停。
 
-- 正式版 `YY.minor.patch`（当前 `26.1.0`），预发布 `-rc.N` / `-beta.N`。
-- 快照版本 `YYwWWx`（ISO 周，当前 `26w42a`）；通道：`dev` / `snapshot` / `beta` / `stable`。
-- 游戏目录按 `<game.root>/versions/<name>/version.json` 扫描；配置与日志由主进程维护。
-
-## 许可
-
-本仓库不含游戏客户端、服务端程序或游戏资源；游戏内容及相关知识产权归原权利人所有。使用声明见 [`NOTICE.txt`](NOTICE.txt)。
+本仓库不包含游戏客户端、服务端程序、账号数据或私钥。作者说明与使用范围见 NOTICE.txt；腾讯相关游戏内容及知识产权归原权利人，所有解释权归腾讯，此表述不表示腾讯授权。
