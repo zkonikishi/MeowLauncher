@@ -1,0 +1,13 @@
+2026-10-13 现代版城镇动态背景
+
+原画：apps/launcher/ui/assets/town-background.png
+生成方式：内置 imagegen。原画为原创幻想城镇概念图，并非游戏内赫顿玛尔地图的精确复刻。
+生成提示词：
+Create a production background asset for a Chinese DNF level-86 era fantasy game launcher. Wide landscape 16:9, 1920x1080 or larger. Original beautifully hand-painted Korean 2D MMORPG environment concept art evoking peaceful classic Hendon Myre and Elvenguard: warm late afternoon sunlight, a cobblestone path leading from a leafy woodland village into an old white plaster and timber town, tiled roofs, a modest stone arch, a distant fountain, very subtle small cloth pennants, lush old trees framing the upper left, atmospheric depth, nostalgic welcoming adventure. Environment only, no characters, no UI, no logos, no text, no ornate border, no modern buildings. Composition: detailed focal town and path in left/center, rightmost 30 percent quieter and darker forest shade so a login panel can sit there; lower left quieter paving for a news card. Rich painterly textures, elegant lighting, restrained amber and forest green with cool distant blue, NOT photorealistic, NOT generic glossy 3D. This is one clean still background to be animated gently by the app later, do not depict artificial motion streaks.
+
+当前动态由 CSS 缓慢推近与 Canvas 光尘／细小落叶组成，不是生成的视频。
+Canvas 限速为 24 FPS；页面隐藏时停止请求动画帧。右上角可暂停，系统减少动态效果偏好会默认关闭。
+动态不包含声音。切换登录／大厅不会重建动画。
+要替换为视频，将本地 MP4 或 WebM 放入 ui/assets，然后在 scene-config.mjs 中填写相对路径并重新构建。
+视频强制静音、循环播放，加载或播放失败时回退到静态原画及现有粒子动效。
+登录和大厅的官方米歇尔背景、活动宣传图已停止使用，复古版保持原花枝底图。

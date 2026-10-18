@@ -1,0 +1,18 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"MeowLauncher client distribution v1",
+  "description":"Native provider pins edition, realm, adapter and HTTPS origin. Publish assets first, verify size/SHA256/ETag/Range, then publish this manifest. Existing INI/CFG/XML/JSON are preserved. removeFiles affects only unmodified files in the previous installed manifest. ZIP archiveRoot removes one declared outer directory.",
+  "type":"object","additionalProperties":false,
+  "required":["schemaVersion","edition","realm","adapter","version","files"],
+  "properties":{
+    "schemaVersion":{"const":1},
+    "edition":{"type":"string","minLength":1,"maxLength":80},
+    "realm":{"type":"string","minLength":1,"maxLength":80},
+    "adapter":{"type":"string","minLength":1,"maxLength":80},
+    "version":{"type":"string","pattern":"^[A-Za-z0-9.-]{1,64}$"},
+    "files":{"type":"array","minItems":1,"maxItems":50000,"items":{"type":"object","additionalProperties":false,"required":["path","size","sha256"],"properties":{"path":{"type":"string","minLength":1,"maxLength":512},"size":{"type":"integer","minimum":0,"maximum":17179869184},"sha256":{"type":"string","pattern":"^[A-Fa-f0-9]{64}$"},"url":{"type":["string","null"],"format":"uri"}}}},
+    "archive":{"type":["object","null"],"additionalProperties":false,"required":["url","size","sha256"],"properties":{"url":{"type":"string","format":"uri"},"size":{"type":"integer","minimum":1,"maximum":68719476736},"sha256":{"type":"string","pattern":"^[A-Fa-f0-9]{64}$"}}},
+    "archiveRoot":{"type":["string","null"],"minLength":1,"maxLength":512},
+    "removeFiles":{"type":"array","uniqueItems":true,"maxItems":50000,"items":{"type":"string","minLength":1,"maxLength":512}}
+  }
+}

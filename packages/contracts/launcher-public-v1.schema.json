@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:oo:launcher-public:1",
+  "title": "OO public launcher configuration v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "brand",
+    "accountProtocol",
+    "realmName",
+    "realmId",
+    "adapterId",
+    "gameHost",
+    "gamePort",
+    "clientDirectory",
+    "accountBaseUrl",
+    "websiteUrl",
+    "contentUrl"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "brand": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "accountProtocol": {
+      "const": "platform-v1"
+    },
+    "realmName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "realmId": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]{1,32}$"
+    },
+    "adapterId": {
+      "const": "s4a21-cn-local-20261013"
+    },
+    "gameHost": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 253,
+      "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?$"
+    },
+    "gamePort": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65535
+    },
+    "clientDirectory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Dot means the executable folder; otherwise slash-separated child directories only. No parent, absolute, drive, reserved or escaping paths. Resolve inside distribution root."
+    },
+    "accountBaseUrl": {
+      "type": "string",
+      "format": "uri",
+      "maxLength": 2048,
+      "pattern": "^https://",
+      "description": "ASCII HTTPS URL; no credentials, query, fragment or backslash. accountBaseUrl must be origin only. Runtime validators apply additional restrictions."
+    },
+    "websiteUrl": {
+      "type": "string",
+      "format": "uri",
+      "maxLength": 2048,
+      "pattern": "^https://",
+      "description": "ASCII HTTPS URL; no credentials, query, fragment or backslash. accountBaseUrl must be origin only. Runtime validators apply additional restrictions."
+    },
+    "registerUrl": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2048,
+      "pattern": "^https://"
+    },
+    "forgotUrl": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2048,
+      "pattern": "^https://"
+    },
+    "contentUrl": {
+      "type": "string",
+      "format": "uri",
+      "maxLength": 2048,
+      "pattern": "^https://",
+      "description": "ASCII HTTPS URL; no credentials, query, fragment or backslash. accountBaseUrl must be origin only. Runtime validators apply additional restrictions."
+    },
+    "updateBaseUrl": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2048,
+      "pattern": "^https://"
+    },
+    "clientManifestUrl": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2048,
+      "pattern": "^https://"
+    },
+    "clientArtifactPrefix": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2048,
+      "pattern": "^https://"
+    },
+    "clientEdition": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[A-Za-z0-9-]{1,80}$"
+    }
+  },
+  "description": "Filename launcher.public.json beside MeowLauncher.exe. Public configuration only; runtime semantic validation is mandatory. Missing file retains built-in defaults; an invalid explicit file fails closed. This file is local distribution configuration, not a signed manifest.",
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "clientManifestUrl"
+        ],
+        "properties": {
+          "clientManifestUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "clientManifestUrl",
+          "clientArtifactPrefix",
+          "clientEdition"
+        ],
+        "properties": {
+          "clientManifestUrl": {
+            "type": "string"
+          },
+          "clientArtifactPrefix": {
+            "type": "string"
+          },
+          "clientEdition": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "clientArtifactPrefix"
+        ],
+        "properties": {
+          "clientArtifactPrefix": {
+            "type": "string"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "clientManifestUrl",
+          "clientArtifactPrefix",
+          "clientEdition"
+        ],
+        "properties": {
+          "clientManifestUrl": {
+            "type": "string"
+          },
+          "clientArtifactPrefix": {
+            "type": "string"
+          },
+          "clientEdition": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "clientEdition"
+        ],
+        "properties": {
+          "clientEdition": {
+            "type": "string"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "clientManifestUrl",
+          "clientArtifactPrefix",
+          "clientEdition"
+        ],
+        "properties": {
+          "clientManifestUrl": {
+            "type": "string"
+          },
+          "clientArtifactPrefix": {
+            "type": "string"
+          },
+          "clientEdition": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  ]
+}

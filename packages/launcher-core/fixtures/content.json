@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-10-13T10:15:58.419Z",
+  "items": [
+    {
+      "id": "client-download",
+      "category": "notice",
+      "title": "S4A21 客户端：下载通道准备中",
+      "summary": "完整客户端暂未提供公开下载链接，请留意后续公告。",
+      "body": "当前版本为 S4A21。完整客户端的公开分发通道仍在准备中，暂未提供下载链接。已有对应版本客户端的玩家，可查看下载中心的登录器和安装说明。其他版本客户端不能替代。",
+      "publishedAt": "2026-10-13T00:00:00Z",
+      "updatedAt": "2026-10-13T10:15:58.419Z",
+      "url": "https://launcher.invalid/news/?article=client-download",
+      "relatedUrl": "https://launcher.invalid/download/#client",
+      "realms": [
+        "s4a21"
+      ]
+    },
+    {
+      "id": "launcher-package",
+      "category": "notice",
+      "title": "登录器下载与完整解压说明",
+      "summary": "下载 ZIP 文件包，完整解压后运行。",
+      "body": "下载中心提供现有 SimpleLauncher 1.0.0 的完整文件包，包含 EXE、DLL 及运行配置。请完整解压到同一个文件夹，并安装 .NET 10 Desktop Runtime x64。该包不包含游戏客户端；包体大小和 SHA256 以下载中心为准。",
+      "publishedAt": "2026-10-13T00:00:00Z",
+      "updatedAt": "2026-10-13T10:15:58.419Z",
+      "url": "https://launcher.invalid/news/?article=launcher-package",
+      "relatedUrl": "https://launcher.invalid/download/#launcher",
+      "realms": [
+        "s4a21"
+      ]
+    },
+    {
+      "id": "account-availability",
+      "category": "notice",
+      "title": "邮箱注册与找回密码开放说明",
+      "summary": "是否开放以对应页面的服务检查结果为准。",
+      "body": "邮箱注册与密码找回依赖邮件验证。页面会先检查服务是否可用，未准备好时会明确提示暂未开放。请勿将“获取验证码”按钮点击完成视作已收到邮件，也不要向他人透露验证码。注册成功后请保存返回的 8 位 UID。",
+      "publishedAt": "2026-10-13T00:00:00Z",
+      "updatedAt": "2026-10-13T10:15:58.419Z",
+      "url": "https://launcher.invalid/news/?article=account-availability",
+      "relatedUrl": "https://launcher.invalid/account/register/",
+      "realms": [
+        "s4a21"
+      ]
+    },
+    {
+      "id": "version-roadmap",
+      "category": "news",
+      "title": "从 S4A21 出发，探索更多版本",
+      "summary": "Arad 当前以 S4A21 为起点，115US 纳入未来规划。",
+      "body": "Arad 将不同游戏版本作为独立篇章展示。当前下载与安装指引面向 S4A21；115US 仍在规划中，尚未确定开放时间、具体内容或下载产物。请以今后发布的正式公告为准。",
+      "publishedAt": "2026-10-13T00:00:00Z",
+      "updatedAt": "2026-10-13T10:15:58.419Z",
+      "url": "https://launcher.invalid/news/?article=version-roadmap",
+      "relatedUrl": "https://launcher.invalid/#versions",
+      "realms": [
+        "s4a21",
+        "115us"
+      ]
+    },
+    {
+      "id": "getting-started",
+      "category": "notice",
+      "title": "回归冒险家：开始前的三件事",
+      "summary": "准备客户端、完整解压登录器、保存账号 UID。",
+      "body": "准备与当前版本匹配的客户端，下载并完整解压登录器包，再在登录器中选择 DNF.exe。已有账号可使用 UID 或注册邮箱登录；新玩家请先查看邮箱注册页面的开放状态。",
+      "publishedAt": "2026-10-13T00:00:00Z",
+      "updatedAt": "2026-10-13T10:15:58.419Z",
+      "url": "https://launcher.invalid/news/?article=getting-started",
+      "relatedUrl": "https://launcher.invalid/download/#install",
+      "realms": [
+        "s4a21"
+      ]
+    }
+  ],
+  "maintenance": {
+    "status": "unknown",
+    "updatedAt": "2026-10-13T10:15:58.419Z",
+    "realms": [
+      "s4a21"
+    ],
+    "plannedStartAt": null,
+    "plannedEndAt": null,
+    "actualStartAt": null,
+    "actualEndAt": null,
+    "noticeId": null
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "exchange_origin": "http://127.0.0.1:0",
+  "client_dir": "C:/workspace/115us-server/261014/115US/客户端/DFO",
+  "client_sha256": "b8235efe5dbf140ea4c535a026e137c4b34cfaecd7c97c78ed5997c377327c95",
+  "deployment": "local",
+  "host_exe": "C:/workspace/115us-server/261014/115US/服务端/server/work/dfo-lan/bin/dfolauncher.exe",
+  "upstream": {
+    "issuer": "REPLACE_WITH_TRUSTED_ISSUER",
+    "host_id": "REPLACE_WITH_TRUSTED_HOST_ID",
+    "realm_id": "REPLACE_WITH_TRUSTED_REALM",
+    "audience": "REPLACE_WITH_TRUSTED_AUDIENCE",
+    "port": 0,
+    "host": "127.0.0.1"
+  },
+  "log_dir": "C:/dev-toolchain/logs/launcher-manual-review",
+  "review_only": true,
+  "auth_mode": "account",
+  "bind_port": 7002,
+  "host_sha256": "b76d1b4e8ab0aa921517f2f6e17a71a6000ab2f541f270248803e28443f1cece"
+}

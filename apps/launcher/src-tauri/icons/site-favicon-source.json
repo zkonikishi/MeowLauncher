@@ -1,0 +1,29 @@
+{
+  "source": "https://launcher.invalid/favicon.svg?v=arad-brand",
+  "sourceSha256": "42a3077730695354438268728cfb50c78f130bad95e874cb6e4a90123f0b0b1b",
+  "embeddedRaster": [
+    2172,
+    724
+  ],
+  "icoSizes": [
+    16,
+    20,
+    24,
+    32,
+    40,
+    48,
+    64,
+    128,
+    256
+  ],
+  "brandPngSizes": [
+    512,
+    1024
+  ],
+  "rgbaSize": [
+    400,
+    400
+  ],
+  "designUnchanged": true,
+  "physical16KTested": false
+}

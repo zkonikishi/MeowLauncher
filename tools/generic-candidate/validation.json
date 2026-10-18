@@ -1,0 +1,125 @@
+{
+  "updated_at": "2026-10-16T10:10:39.687633+08:00",
+  "product": "通用版/通用模式 candidate",
+  "verified": [
+    "MEOWSIMPLE/1 strict4096B framing",
+    "scope authority/realm/save_profile/nonce/socket",
+    "registration response only, close required before new login",
+    "ready requires exact same socket/profile/name and positive int64 string, rejects extra UID/numerictrue",
+    "wrong password peer closes without native",
+    "exact username and UTF8 password 1..72bytes; no trim/normalization",
+    "TLS1.3 CA+hostname verification context; numeric loopback plaintext opt-in only"
+  ],
+  "status": "rust-native-GUI-auth-candidate; Python bridge remains unmounted",
+  "host_report_correction": {
+    "original": "C:/workspace/_tools/logs/115us-host-identity/simple-main-20261016-082514.report.json",
+    "correction": "C:/workspace/_tools/logs/115us-host-identity/simple-main-20261016-082514.correction.json",
+    "cleanup": "private temp remains, deletion blocked by policy per host; launcher did not attempt deletion",
+    "owner": "host",
+    "status": "native/TLS tests evidence retained, aggregate success withdrawn because SQLite temp cleanup failed; not reported launcher bridge or DFO"
+  },
+  "API": {
+    "module": "simple_bridge.py",
+    "ids": "native_account_id decimal string, positive signed int64",
+    "register": "await SimpleConnector(target).register(username,password) -> {registered:true}; no native stream",
+    "bridge": "SimpleBridge(target,async_credential_provider); await start(loopback,port); await close()",
+    "login": "await SimpleConnector(target).login(username,password) -> (reader,writer,identity), only after strict ready",
+    "privacy": "provider keeps username/password in memory; no platform UID/session/service key; no DB imports; no logs or argv credentials",
+    "target": "ServerTarget(host,port,authority_id,realm_id,save_profile_id,ca_file=None,allow_loopback_plaintext=False)"
+  },
+  "tests": {
+    "scope": "actual loopback TCP, synthetic protocol fixture; no real bcrypt/DAO/TLS handshake",
+    "command": "python -B -W error::ResourceWarning -m unittest -v test_simple_bridge",
+    "passed": 8,
+    "failed": 0
+  },
+  "not_verified": [
+    "actual host+DAO+TLS handshake with this Bridge",
+    "complete51channel generic mapping",
+    "generic GUI registered/login and mode switching",
+    "standalone generic EXE release/profile contamination audit",
+    "DFO/WFP/town/public"
+  ],
+  "legacy_wire_mode": "simple",
+  "protocol": "C:/workspace/_src/115us-simple-mode-candidate/server/work/dfo-lan/docs/host-identity-candidate/simple-protocol-v1.json",
+  "latest_host_freeze": {
+    "handoff": "C:/workspace/_src/115us-simple-mode-candidate/handoff.json",
+    "validation": "C:/workspace/_src/115us-simple-mode-candidate/server/work/dfo-lan/docs/host-identity-candidate/universal-host-r1-validation.json",
+    "report": "C:/workspace/_tools/logs/115us-host-identity/simple-main-20261016-083010.report.json",
+    "host_main_tls_register_login_native": true,
+    "host_main_cleanup": true,
+    "host_full_suite": {
+      "passed": 5071,
+      "failed": 411,
+      "skipped": 473,
+      "new_failures": 0
+    },
+    "launcher_bridge": false,
+    "launcher_GUI": false,
+    "DFO": false,
+    "public": false,
+    "note": "Latest real-main success supersedes earlier withdrawn aggregate result. Full suite retains 411 baseline failures; do not state all tests passed."
+  },
+  "rust_gui_successor": {
+    "source": "packages/launcher-core/src/generic.rs",
+    "native_entry": "apps/launcher/src-tauri/src/generic_app.rs",
+    "UI": "apps/launcher/ui/generic-ui.mjs",
+    "release": "releases/0.7.1-generic-auth-review",
+    "validation": {
+      "core_custom": {
+        "passed": 58,
+        "failed": 0,
+        "ignored": 3
+      },
+      "core_sponsor": {
+        "passed": 58,
+        "failed": 0,
+        "ignored": 3
+      },
+      "rust_simple_vectors": 5,
+      "generic_browser_UI": "docs/qa/generic-ui-smoke.json",
+      "actual_EXE_WebView2_IPC": "docs/qa/generic-native-smoke.json",
+      "custom_browser_regression": "docs/qa/ui-smoke.json",
+      "cargo_check": "passed"
+    },
+    "limits": [
+      "No actual target TLS authentication with this Rust adapter yet; host Go SDK native-main evidence is separate",
+      "Session same-stream is ready for bridge integration, but DFO host and complete51channel/directory handoff not mounted",
+      "Game start clearly reports unavailable; no DFO launched",
+      "MeowLink installer descriptor, signed GM config import, generic update/content integration pending",
+      "Email/SMS/QQ/WeChat/Douyin extensions are design only",
+      "No production deployment/public feed modification"
+    ]
+  },
+  "actual_rust_host_TLS": {
+    "run_id": "20261016-100405",
+    "scope": "Actual launcher Rust adapter ↔ frozen universal-r1 main TLS registration/reconnect/login and same-stream native bootstrap; not GUI/DFO/51-channel/C1/C8/C4 acceptance",
+    "reports": [
+      "C:/workspace/_tools/logs/115us-host-identity/rust-actual-host-20261016-100405.json",
+      "C:/workspace/_tools/logs/115us-host-identity/rust-main-20261016-100405.report.json",
+      "C:/workspace/_tools/logs/115us-host-identity/rust-actual-host-20261016-100405-receipt.json"
+    ],
+    "passed": true,
+    "probe_sha256": "6f43c2040db75f052b4aeeafeb65699f202f114a19025e5e3ebd807abfd90e25",
+    "host_binary_sha256": "f1c565ed95853727c5f984ae7729c91aa7245ea37578a9075e0a431b11270f67",
+    "native_ids": [
+      "3",
+      "1",
+      "2"
+    ],
+    "same_stream_bytes_per_account": 1060,
+    "native_sha256": "3dd366183cd74402151501e5e8904256ba25b8b1ccc064d3ee5c7ce6cb4a87c1",
+    "negative_checks": [
+      "wrong_password",
+      "wrong_hostname",
+      "wrong_scope_before_credentials"
+    ],
+    "TLS": "1.3",
+    "owned_main_stopped": true,
+    "private_temp_absent": true,
+    "one_runner": "host-owner _tools/run_rust_actual_host_probe_20261016.py; launcher runner not executed",
+    "no_13326": true,
+    "no_DFO": true,
+    "no_production": true
+  }
+}

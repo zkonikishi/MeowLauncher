@@ -1,0 +1,14 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"MeowCore controlled UI content boundary v1",
+  "description":"Proposed product integration boundary, not a completed host SDK. Trusted host registration must separately grant UI content permission. Content cannot carry executable code or target original game UI.",
+  "type":"object","additionalProperties":false,
+  "required":["schemaVersion","edition","versionId","items"],
+  "properties":{
+    "schemaVersion":{"const":1},"edition":{"type":"string"},"versionId":{"type":"string"},
+    "items":{"type":"array","maxItems":12,"items":{"type":"object","additionalProperties":false,"required":["pluginId","placement","kind","text"],"properties":{
+      "pluginId":{"type":"string","minLength":1,"maxLength":64,"pattern":"^[A-Za-z0-9_.+\\-]+$"},
+      "placement":{"enum":["launcher.login","launcher.lobby","manager.overview"]},"kind":{"enum":["text","link","image"]},"text":{"type":"string","minLength":1,"maxLength":500},"url":{"type":["string","null"],"maxLength":2048}
+    }}}
+  }
+}

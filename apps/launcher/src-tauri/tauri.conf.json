@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "MeowLauncher",
+  "version": "0.7.1",
+  "identifier": "com.meowopia.oo-launcher",
+  "build": { "frontendDist": "../ui" },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [{ "label": "main", "title": "MeowLauncher · 86s4a21", "width": 1280, "height": 728, "resizable": false, "decorations": false, "center": true }],
+    "security": { "csp": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src ipc: http://ipc.localhost; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'" }
+  },
+  "bundle": { "active": false, "icon": ["icons/site-favicon.ico"] }
+}

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="460" viewBox="0 0 1200 460">
+<defs><linearGradient id="sky" x2="1" y2="1"><stop stop-color="#121c27"/><stop offset=".6" stop-color="#3a4240"/><stop offset="1" stop-color="#d3b875"/></linearGradient><linearGradient id="light" x2="0" y2="1"><stop stop-color="#f4d69a" stop-opacity=".85"/><stop offset="1" stop-color="#f4d69a" stop-opacity="0"/></linearGradient><linearGradient id="stone" x2="1" y2="0"><stop stop-color="#1e2c31"/><stop offset="1" stop-color="#47534c"/></linearGradient></defs>
+<path fill="url(#sky)" d="M0 0h1200v460H0z"/><circle cx="845" cy="134" r="62" fill="#e3cb94" opacity=".32"/><circle cx="845" cy="134" r="43" fill="#efdbab" opacity=".45"/>
+<path fill="#596560" opacity=".7" d="m360 310 129-143 60 71 150-171 110 147 84-85 307 190v141H360z"/>
+<path fill="#34484a" d="m351 385 147-168 50 79 79-94 74 110 79-127 113 148 63-67 244 128v66H351z"/>
+<path fill="url(#light)" d="m829 0-244 460h87L885 0zM903 0 805 460h39L938 0z" opacity=".24"/>
+<path fill="#203238" d="m470 460 192-143 135 65 134-102 269 110v70z"/>
+<path fill="url(#stone)" stroke="#bba676" stroke-opacity=".25" stroke-width="2" d="M755 410V197l-16-11v-19l39-8 13-35 12 35 44 8v19l-16 11v53h90v-53l-16-11v-19l39-8 13-35 12 35 43 8v19l-16 11v213h-43V304q-34-60-68 0v106z"/>
+<path fill="#c7af79" opacity=".52" d="M777 218h8v39h-8zm155 0h8v39h-8zM847 264h9v6h-9z"/>
+<path fill="#121f28" d="m0 431 121-57 130 28 95-33 164 44 110-16 99 38 120-8 164 19 197-27v41H0z"/>
+<path d="m754 459 64-58h54l-24 58" fill="#bda478" opacity=".22"/>
+<g fill="#e9d29a" opacity=".7"><circle cx="700" cy="116" r="1.5"/><circle cx="962" cy="80" r="1"/><circle cx="1050" cy="205" r="1.5"/><circle cx="634" cy="70" r="1"/><circle cx="1090" cy="120" r="1"/></g>
+</svg>

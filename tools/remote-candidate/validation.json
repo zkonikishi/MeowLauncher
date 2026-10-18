@@ -1,0 +1,107 @@
+{
+  "updated_at": "2026-10-16T08:01:02.4277905+08:00",
+  "status": "isolated-tested-candidate-not-player-integration",
+  "protocol": "host r5 controlled bridge; not DFO native framing",
+  "files": [
+    "bridge.py",
+    "test_bridge.py"
+  ],
+  "tests": {
+    "command": "python -B -m unittest -v test_bridge",
+    "passed": 10,
+    "cwd": "C:/workspace/Launcher/MeowLauncher/tools/remote-candidate",
+    "failed": 0,
+    "scope": "real loopback TCP with synthetic native bytes and fake Exchange/Authority; TLS context verification policy only, no TLS handshake/server integration"
+  },
+  "verified": [
+    "MEOW115/1 prelude + uint32BE exact frame reads, <=16384 bytes",
+    "strict known challenge fields and configured scope",
+    "opaque a1 assertion only, no identity claims from player",
+    "requires native-ready-v1 exact connection_id/version_id/boolean ready with no unknown or duplicate keys",
+    "no native bytes read/forwarded until matching ready",
+    "independent upstream per accepted player connection",
+    "denial/timeout/wrong scope/invalid ready reject",
+    "player disconnect while Exchange pending cancels exchange when EOF observed without buffered input",
+    "shutdown closes active sessions before awaiting server closed",
+    "host-client argv plan only, no local gateway/storage launch"
+  ],
+  "resolved_failure": "initial shutdown waited for server closed before closing active clients; corrected order and regression now passes",
+  "not_verified": [
+    "actual host r5 binary interoperability",
+    "real TLS handshake, configured HK endpoint and certificate",
+    "authenticated player-facing website Exchange adapter; private Authority interface cannot be embedded as player credentials",
+    "signed GM external config and initial public key trust",
+    "WFP/native DFO client target and real game login",
+    "native bytes already buffered before peer close: upstream authentication timeout bounds completion; immediate EOF watcher cannot inspect buffered native before ready"
+  ],
+  "not_deployed": true,
+  "not_in_071_exe": true,
+  "references": [
+    "_src/115us-host-identity-candidate/server/work/dfo-lan/internal/hostchallenge/framing.go",
+    "_src/DfoAccountService/login-assertion-v1.contract.json",
+    "Server/115US/_analysis/client-baseline-20261015/cloud-launcher-findings.md"
+  ],
+  "next": [
+    "Add actual host r5 process interoperability fixture after host delivers entry/binary",
+    "Website owner provide authenticated player Exchange endpoint/session adapter, distinct from private Authority service_token",
+    "Pin TLS endpoint/certificate trust using GM external config trust policy",
+    "Client owner manually launch isolated host-client to verify 127.0.0.4 WFP and exact local port",
+    "Control center alone arranges HK tunnel/endpoint and public admission"
+  ],
+  "real_fixture_integration": {
+    "host": "actual Go test process via overlay; not wireprobe main",
+    "native": "strict principal/native account + selectOwnedRole; synthetic TCP bytes, not DFO packet acceptance",
+    "host_source_unchanged": true,
+    "http": "actual website HTTP candidate + X-Launcher-Session per-user resolver",
+    "cleanup_verified": true,
+    "consumed": 2,
+    "report": "tools/remote-candidate/real-integration-20261016-072004.json",
+    "replay_rejected": 2,
+    "authority": "actual MariaAuthority/DAO009",
+    "lock_released": true,
+    "passed": true,
+    "production": false,
+    "connections": 2
+  },
+  "host_main_integration": {
+    "channels": 51,
+    "bridged_connections": 2,
+    "native_accounts": 2,
+    "strict_ready_before_native": true,
+    "report": "C:/workspace/_tools/logs/115us-host-identity/r5-real-http-20261016-073203.report.json",
+    "passed": true,
+    "cleanup_verified": true,
+    "performed_by": "host owner",
+    "TLS": "not tested",
+    "initial_bytes": 1060,
+    "assets_unchanged": true,
+    "DFO": false,
+    "reviewed_by": "launcher owner, report fields read and checked",
+    "wireprobe_main": true,
+    "production": false,
+    "binary_sha256": "7690d32c0459531a1d8fbc74ba7552067ebffbaf030d74869cc8408c78cf9719",
+    "town": false
+  },
+  "native_entry_pipeline_reviewed": {
+    "DFO": false,
+    "performed_by": "host owner",
+    "reviewed": "report fields checked",
+    "assets_unchanged": false,
+    "production": false,
+    "C1_C8_C4_NOTI124": "reported and native_town_pipeline=true in report",
+    "report": "C:/workspace/_tools/logs/115us-host-identity/r5-real-http-20261016-075039.report.json",
+    "town_acceptance": false,
+    "expected_entry_writes": true
+  },
+  "manual_review_package": {
+    "GUI_071": "not modified",
+    "zip": "C:/workspace/Launcher/MeowLauncher/releases/115us-account-manual-review-r1.zip",
+    "example_config": "port0 and placeholder scope; intentionally unusable until trusted fixture arranged",
+    "directory": "C:/workspace/Launcher/MeowLauncher/releases/115us-account-manual-review-r1",
+    "tests_passed": 13,
+    "manual_DFO_run": false,
+    "production_login_session": "not wired",
+    "signing": "not integrated",
+    "zip_sha256": "C8F11C17BD1B563432F03887745212AF49E1716B04612538F5A2A6CE9A3FA45E"
+  }
+}

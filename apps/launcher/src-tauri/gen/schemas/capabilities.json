@@ -1,0 +1,1 @@
+{"main-window":{"identifier":"main-window","description":"Local launcher window only. Files and network are handled by scoped Rust commands.","local":true,"windows":["main"],"permissions":["core:default","core:window:allow-start-dragging"]}}

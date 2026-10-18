@@ -1,0 +1,271 @@
+{
+  "schema": "meow115-local-host-target-v1",
+  "mode": "simple",
+  "authorityId": "universal-smoke",
+  "realmId": "fixture",
+  "saveProfileId": "native",
+  "gameTransport": "tls1.3-simple-v1",
+  "serverName": "127.0.0.1",
+  "certificateSha256": "24a01cc54443c8440d69b40b73c94b62c1c4394f0b091e6f8d0c6a8bd10d3c58",
+  "routes": [
+    {
+      "channelId": 1,
+      "listenAddress": "127.0.0.1:61869",
+      "advertiseAddress": "127.0.0.4:61869"
+    },
+    {
+      "channelId": 6,
+      "listenAddress": "127.0.0.1:61870",
+      "advertiseAddress": "127.0.0.4:61870"
+    },
+    {
+      "channelId": 10,
+      "listenAddress": "127.0.0.1:61871",
+      "advertiseAddress": "127.0.0.4:61871"
+    },
+    {
+      "channelId": 11,
+      "listenAddress": "127.0.0.1:61872",
+      "advertiseAddress": "127.0.0.4:61872"
+    },
+    {
+      "channelId": 12,
+      "listenAddress": "127.0.0.1:61873",
+      "advertiseAddress": "127.0.0.4:61873"
+    },
+    {
+      "channelId": 13,
+      "listenAddress": "127.0.0.1:61874",
+      "advertiseAddress": "127.0.0.4:61874"
+    },
+    {
+      "channelId": 14,
+      "listenAddress": "127.0.0.1:61875",
+      "advertiseAddress": "127.0.0.4:61875"
+    },
+    {
+      "channelId": 15,
+      "listenAddress": "127.0.0.1:61876",
+      "advertiseAddress": "127.0.0.4:61876"
+    },
+    {
+      "channelId": 16,
+      "listenAddress": "127.0.0.1:61877",
+      "advertiseAddress": "127.0.0.4:61877"
+    },
+    {
+      "channelId": 21,
+      "listenAddress": "127.0.0.1:61878",
+      "advertiseAddress": "127.0.0.4:61878"
+    },
+    {
+      "channelId": 45,
+      "listenAddress": "127.0.0.1:61879",
+      "advertiseAddress": "127.0.0.4:61879"
+    },
+    {
+      "channelId": 50,
+      "listenAddress": "127.0.0.1:61880",
+      "advertiseAddress": "127.0.0.4:61880"
+    },
+    {
+      "channelId": 67,
+      "listenAddress": "127.0.0.1:61881",
+      "advertiseAddress": "127.0.0.4:61881"
+    },
+    {
+      "channelId": 76,
+      "listenAddress": "127.0.0.1:61882",
+      "advertiseAddress": "127.0.0.4:61882"
+    },
+    {
+      "channelId": 86,
+      "listenAddress": "127.0.0.1:61883",
+      "advertiseAddress": "127.0.0.4:61883"
+    },
+    {
+      "channelId": 82,
+      "listenAddress": "127.0.0.1:61884",
+      "advertiseAddress": "127.0.0.4:61884"
+    },
+    {
+      "channelId": 83,
+      "listenAddress": "127.0.0.1:61885",
+      "advertiseAddress": "127.0.0.4:61885"
+    },
+    {
+      "channelId": 84,
+      "listenAddress": "127.0.0.1:61886",
+      "advertiseAddress": "127.0.0.4:61886"
+    },
+    {
+      "channelId": 85,
+      "listenAddress": "127.0.0.1:61887",
+      "advertiseAddress": "127.0.0.4:61887"
+    },
+    {
+      "channelId": 9,
+      "listenAddress": "127.0.0.1:61888",
+      "advertiseAddress": "127.0.0.4:61888"
+    },
+    {
+      "channelId": 29,
+      "listenAddress": "127.0.0.1:61889",
+      "advertiseAddress": "127.0.0.4:61889"
+    },
+    {
+      "channelId": 88,
+      "listenAddress": "127.0.0.1:61890",
+      "advertiseAddress": "127.0.0.4:61890"
+    },
+    {
+      "channelId": 91,
+      "listenAddress": "127.0.0.1:61891",
+      "advertiseAddress": "127.0.0.4:61891"
+    },
+    {
+      "channelId": 92,
+      "listenAddress": "127.0.0.1:61892",
+      "advertiseAddress": "127.0.0.4:61892"
+    },
+    {
+      "channelId": 93,
+      "listenAddress": "127.0.0.1:61893",
+      "advertiseAddress": "127.0.0.4:61893"
+    },
+    {
+      "channelId": 94,
+      "listenAddress": "127.0.0.1:61894",
+      "advertiseAddress": "127.0.0.4:61894"
+    },
+    {
+      "channelId": 95,
+      "listenAddress": "127.0.0.1:61895",
+      "advertiseAddress": "127.0.0.4:61895"
+    },
+    {
+      "channelId": 96,
+      "listenAddress": "127.0.0.1:61896",
+      "advertiseAddress": "127.0.0.4:61896"
+    },
+    {
+      "channelId": 97,
+      "listenAddress": "127.0.0.1:61897",
+      "advertiseAddress": "127.0.0.4:61897"
+    },
+    {
+      "channelId": 98,
+      "listenAddress": "127.0.0.1:61898",
+      "advertiseAddress": "127.0.0.4:61898"
+    },
+    {
+      "channelId": 99,
+      "listenAddress": "127.0.0.1:61899",
+      "advertiseAddress": "127.0.0.4:61899"
+    },
+    {
+      "channelId": 100,
+      "listenAddress": "127.0.0.1:61900",
+      "advertiseAddress": "127.0.0.4:61900"
+    },
+    {
+      "channelId": 101,
+      "listenAddress": "127.0.0.1:61901",
+      "advertiseAddress": "127.0.0.4:61901"
+    },
+    {
+      "channelId": 102,
+      "listenAddress": "127.0.0.1:61902",
+      "advertiseAddress": "127.0.0.4:61902"
+    },
+    {
+      "channelId": 103,
+      "listenAddress": "127.0.0.1:61903",
+      "advertiseAddress": "127.0.0.4:61903"
+    },
+    {
+      "channelId": 104,
+      "listenAddress": "127.0.0.1:61904",
+      "advertiseAddress": "127.0.0.4:61904"
+    },
+    {
+      "channelId": 105,
+      "listenAddress": "127.0.0.1:61905",
+      "advertiseAddress": "127.0.0.4:61905"
+    },
+    {
+      "channelId": 106,
+      "listenAddress": "127.0.0.1:61906",
+      "advertiseAddress": "127.0.0.4:61906"
+    },
+    {
+      "channelId": 107,
+      "listenAddress": "127.0.0.1:61907",
+      "advertiseAddress": "127.0.0.4:61907"
+    },
+    {
+      "channelId": 108,
+      "listenAddress": "127.0.0.1:61908",
+      "advertiseAddress": "127.0.0.4:61908"
+    },
+    {
+      "channelId": 109,
+      "listenAddress": "127.0.0.1:61909",
+      "advertiseAddress": "127.0.0.4:61909"
+    },
+    {
+      "channelId": 110,
+      "listenAddress": "127.0.0.1:61910",
+      "advertiseAddress": "127.0.0.4:61910"
+    },
+    {
+      "channelId": 111,
+      "listenAddress": "127.0.0.1:61911",
+      "advertiseAddress": "127.0.0.4:61911"
+    },
+    {
+      "channelId": 112,
+      "listenAddress": "127.0.0.1:61912",
+      "advertiseAddress": "127.0.0.4:61912"
+    },
+    {
+      "channelId": 113,
+      "listenAddress": "127.0.0.1:61913",
+      "advertiseAddress": "127.0.0.4:61913"
+    },
+    {
+      "channelId": 114,
+      "listenAddress": "127.0.0.1:61914",
+      "advertiseAddress": "127.0.0.4:61914"
+    },
+    {
+      "channelId": 116,
+      "listenAddress": "127.0.0.1:61915",
+      "advertiseAddress": "127.0.0.4:61915"
+    },
+    {
+      "channelId": 117,
+      "listenAddress": "127.0.0.1:61916",
+      "advertiseAddress": "127.0.0.4:61916"
+    },
+    {
+      "channelId": 118,
+      "listenAddress": "127.0.0.1:61917",
+      "advertiseAddress": "127.0.0.4:61917"
+    },
+    {
+      "channelId": 119,
+      "listenAddress": "127.0.0.1:61918",
+      "advertiseAddress": "127.0.0.4:61918"
+    },
+    {
+      "channelId": 120,
+      "listenAddress": "127.0.0.1:61919",
+      "advertiseAddress": "127.0.0.4:61919"
+    }
+  ],
+  "directory": {
+    "address": "127.0.0.1:61921",
+    "transport": "native-loopback-tcp-v1"
+  }
+}

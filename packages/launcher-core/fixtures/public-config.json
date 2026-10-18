@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "brand": "Arad",
+  "accountProtocol": "platform-v1",
+  "accountBaseUrl": "https://accounts.example.com",
+  "websiteUrl": "https://www.example.com",
+  "registerUrl": "https://www.example.com/register/",
+  "forgotUrl": "https://www.example.com/forgot/",
+  "contentUrl": "https://www.example.com/launcher/content.json",
+  "realmId": "test-realm",
+  "realmName": "隔离测试区",
+  "adapterId": "s4a21-cn-local-20261013",
+  "gameHost": "game.example.com",
+  "gamePort": 17001,
+  "clientDirectory": "客户端 测试"
+}

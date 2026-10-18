@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {modeCopy,validateSimpleCredentials,nativeAccountId,simpleCredentialAdapter} from '../apps/launcher/ui/auth-modes.mjs';
+assert.equal(modeCopy.account.label,'自定义模式');assert.equal(modeCopy.simple.label,'通用模式');
+assert.equal(validateSimpleCredentials('Alice_1',' x '),null);
+for(const name of [' Alice','alice ','a.b','中文','a'.repeat(33)])assert.ok(validateSimpleCredentials(name,'x'));
+assert.equal(validateSimpleCredentials('Alice','密'.repeat(24)),null);assert.ok(validateSimpleCredentials('Alice','密'.repeat(25)));
+assert.ok(validateSimpleCredentials('Alice',''));assert.ok(validateSimpleCredentials('Alice','x'.repeat(73)));
+assert.equal(nativeAccountId('9223372036854775807'),'9223372036854775807');
+for(const value of ['0','01','-1','9223372036854775808',4294967296])assert.throws(()=>nativeAccountId(value));
+await assert.rejects(simpleCredentialAdapter()('authenticate','Alice','fixture-only'),e=>e.code==='simple_unavailable');
+let seen;
+await simpleCredentialAdapter(async(operation,input)=>{seen={operation,...input};})('register','Alice',' fixture-only ');
+assert.equal(seen.username,'Alice');assert.equal(seen.password,' fixture-only ');assert.deepEqual(Object.keys(seen),['operation','username','password']);
+await assert.rejects(simpleCredentialAdapter(async()=>{throw Error('never expose fixture password');})('authenticate','Alice','fixture-only'),e=>e.code==='simple_rejected'&&!e.message.includes('fixture'));
+console.log('PASS: mode copy, exact username/password bytes, int64 string IDs, unavailable adapter, no UID/email or raw error exposure');
