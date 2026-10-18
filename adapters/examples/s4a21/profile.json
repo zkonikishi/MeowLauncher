@@ -1,0 +1,20 @@
+{
+  "id": "s4a21-cn-local-20261013",
+  "versionId": "86s4a21",
+  "executable": "DNF.exe",
+  "machine": "x86",
+  "executableSha256": "1f8244d3f7309bbe2fde4299e1863a894f6b28d5707bf01732980585b20b00dd",
+  "arguments": [
+    "9?{host}?{port}?{uid}?{token}?1?0?6?0?2?1???0?0?0?9n2b1c8r3w7y?0?0?0?0?0?2?0?0?0?0?0?0?0?0?0?0?0?4D87"
+  ],
+  "requiredFiles": [
+    "az.dll",
+    "ijl15.dll",
+    "GameGaurd.dll",
+    "Script.pvf"
+  ],
+  "requiredDirectories": [
+    "ImagePacks2",
+    "SoundPacks"
+  ]
+}

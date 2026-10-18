@@ -9,8 +9,22 @@
   "contentUrl": "https://www.example.com/launcher/content.json",
   "realmId": "test-realm",
   "realmName": "隔离测试区",
-  "adapterId": "s4a21-cn-local-20261013",
+  "adapterId": "fixture-generic",
   "gameHost": "game.example.com",
   "gamePort": 17001,
-  "clientDirectory": "客户端 测试"
+  "clientDirectory": "客户端 测试",
+  "clientAdapter": {
+    "id": "fixture-generic",
+    "versionId": "fixture",
+    "executable": "OtherGame.exe",
+    "machine": "x64",
+    "executableSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "arguments": [
+      "--server={host}:{port}",
+      "--uid={uid}",
+      "--ticket={token}"
+    ],
+    "requiredFiles": [],
+    "requiredDirectories": []
+  }
 }

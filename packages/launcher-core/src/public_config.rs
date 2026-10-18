@@ -1,4 +1,4 @@
-//! Public distribution settings only. Executable hashes and command templates stay compiled in.
+//! Public distribution settings only. Client adapters are explicit distribution configuration.
 use crate::{error, Result};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -31,6 +31,7 @@ pub struct PublicConfig {
     pub realm_id: String,
     pub realm_name: String,
     pub adapter_id: String,
+    pub client_adapter: crate::client::Profile,
     pub game_host: String,
     pub game_port: u16,
     pub client_directory: String,
@@ -58,6 +59,11 @@ pub fn https_url(value: &str) -> Result<reqwest::Url> {
         let config=PublicConfig::load(&new).unwrap().unwrap();assert_eq!(config.client_path(&new).unwrap(),new.join("客户端 测试").canonicalize().unwrap());
         let mut value=serde_json::to_value(fixture()).unwrap();value["password"]=serde_json::json!("secret");assert!(PublicConfig::parse(&serde_json::to_vec(&value).unwrap()).is_err());
         std::fs::write(new.join(FILE_NAME),b"{").unwrap();assert!(PublicConfig::load(&new).is_err());assert!(PublicConfig::load(temp.path()).unwrap().is_none());
+    }
+    #[test] fn adapter_selection_is_explicit_and_not_a_compiled_version() {
+        let mut c=fixture();c.adapter_id="another-family".into();c.client_adapter.id=c.adapter_id.clone();assert!(c.validate().is_ok());
+        c.client_adapter.id="wrong-profile".into();assert!(c.validate().is_err());
+        let mut raw:serde_json::Value=serde_json::from_slice(include_bytes!("../fixtures/public-config.json")).unwrap();raw.as_object_mut().unwrap().remove("clientAdapter");assert!(PublicConfig::parse(&serde_json::to_vec(&raw).unwrap()).is_err());
     }
     #[test] fn rejects_escape_and_unsafe_endpoints() {
         for path in ["../client","/client","C:/client","Client\\x","a/../x","a//x","a."] {let mut c=fixture();c.client_directory=path.into();assert!(c.validate().is_err(),"{path}");}
@@ -96,7 +102,8 @@ pub fn valid_host(s:&str)->bool {
 }
 impl PublicConfig {
     pub fn validate(&self)->Result<()> {
-        if self.schema_version!=1 || self.account_protocol!="platform-v1" || self.adapter_id!=crate::client::profile().id || self.game_port==0 || !valid_host(&self.game_host) {return Err(invalid());}
+        self.client_adapter.validate()?;
+        if self.schema_version!=1 || self.account_protocol!="platform-v1" || self.adapter_id!=self.client_adapter.id || self.game_port==0 || !valid_host(&self.game_host) {return Err(invalid());}
         for s in [&self.brand,&self.realm_name] {if s.trim().is_empty() || s.chars().count()>80 || s.chars().any(char::is_control) {return Err(invalid());}}
         if self.realm_id.is_empty() || self.realm_id.len()>32 || !self.realm_id.bytes().all(|b|b.is_ascii_lowercase()||b.is_ascii_digit()||b==b'-') {return Err(invalid());}
         origin_only(&self.account_base_url)?;
@@ -148,6 +155,6 @@ impl PublicConfig {
     /// 已配置的客户端分发源；未配置时返回 None。
     pub fn client_source(&self)->Result<Option<crate::distribution::Source>> {
         let (Some(manifest),Some(prefix),Some(edition))=(self.client_manifest_url.as_ref(),self.client_artifact_prefix.as_ref(),self.client_edition.as_ref()) else {return Ok(None)};
-        Ok(Some(crate::distribution::Source::new(edition,self.realm_id.as_str(),self.adapter_id.as_str(),manifest,prefix)?))
+        Ok(Some(crate::distribution::Source::new(edition,self.realm_id.as_str(),self.adapter_id.as_str(),manifest,prefix)?.with_profile(self.client_adapter.clone())?))
     }
 }

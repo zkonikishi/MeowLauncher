@@ -28,6 +28,7 @@ struct LoginCredential { identifier: String, password: Zeroizing<String> }
 #[derive(Default)]
 pub struct LaunchCoordinator {
     endpoint: Option<(String,u16)>,
+    adapter: Option<client::Profile>,
     busy: AtomicBool,
     child: Mutex<Option<Child>>,
     pending: Mutex<Option<Session>>,
@@ -40,34 +41,12 @@ impl Drop for ResetBusy<'_> {
         self.0.store(false, Ordering::SeqCst);
     }
 }
-pub fn arguments(ticket: &Ticket, now: u64) -> Result<Zeroizing<String>> {
-    arguments_for(ticket, now, None)
-}
-fn arguments_for(ticket: &Ticket, now: u64, endpoint: Option<&(String,u16)>) -> Result<Zeroizing<String>> {
-    if ticket.expires <= now + 5 {
-        return Err(error("token_expired", "登录凭据已过期，请重新登录。"));
-    }
-    if ticket.uid.len() != 8
-        || ticket.uid == "00000000"
-        || !ticket.uid.bytes().all(|b| b.is_ascii_digit())
-        || ticket.token.is_empty()
-        || !ticket
-            .token
-            .bytes()
-            .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
-    {
-        return Err(error("invalid_token", "登录凭据格式无效。"));
-    }
-    let p = client::profile();
-    Ok(Zeroizing::new(format!(
-        "{}?{}?{}?{}?{}?{}",
-        p.argument_prefix,
-        endpoint.map(|e|e.0.as_str()).unwrap_or(&p.game_host),
-        endpoint.map(|e|e.1).unwrap_or(p.game_port),
-        ticket.uid,
-        ticket.token.as_str(),
-        p.argument_suffix
-    )))
+fn arguments_for(ticket:&Ticket, now:u64, endpoint:Option<&(String,u16)>, profile:&client::Profile)->Result<Zeroizing<Vec<String>>> {
+    profile.validate()?;
+    if ticket.expires<=now+5 {return Err(error("token_expired", "登录凭据已过期，请重新登录。"));}
+    if ticket.uid.is_empty() || ticket.uid.len()>128 || ticket.token.is_empty() || ticket.token.len()>8192 || [&ticket.uid,ticket.token.as_str()].iter().any(|s| !s.bytes().all(|b|b.is_ascii_alphanumeric() || b==b'-' || b==b'_')) {return Err(error("invalid_token", "登录凭据格式无效。"));}
+    let (host,port)=endpoint.ok_or(error("adapter_not_configured", "未配置游戏连接地址。"))?;
+    Ok(Zeroizing::new(profile.arguments.iter().map(|a|a.replace("{host}",host).replace("{port}",&port.to_string()).replace("{uid}",&ticket.uid).replace("{token}",ticket.token.as_str())).collect()))
 }
 impl LaunchCoordinator {
     pub fn running(&self)->Result<bool>{
@@ -77,7 +56,7 @@ impl LaunchCoordinator {
     }
 
     pub fn configured(config:&crate::public_config::PublicConfig)->Result<Self> {
-        config.validate()?;Ok(Self{endpoint:Some((config.game_host.clone(),config.game_port)),..Self::default()})
+        config.validate()?;Ok(Self{endpoint:Some((config.game_host.clone(),config.game_port)),adapter:Some(config.client_adapter.clone()),..Self::default()})
     }
     pub async fn authenticate(&self, account: &AccountClient, identifier: String, password: Zeroizing<String>) -> Result<String> {
         crate::account::validate_login_uid(&identifier)?;
@@ -131,8 +110,9 @@ impl LaunchCoordinator {
                 if child.try_wait().map_err(|_| error("process_state", "游戏状态不可用。"))?.is_none() { return Err(error("game_running", "游戏仍在运行。")); }
             }
         }
+        let adapter=self.adapter.clone().ok_or(error("adapter_not_configured", "未配置客户端适配器。"))?;
         let dir=directory.clone();
-        let report=tokio::task::spawn_blocking(move || client::inspect(&dir)).await.map_err(|_| error("inspection_failed", "检查失败。"))??;
+        let report=tokio::task::spawn_blocking(move || client::inspect_with_profile(&dir, &adapter)).await.map_err(|_| error("inspection_failed", "检查失败。"))??;
         if !report.ready { return Err(error("client_not_ready", "客户端检查未通过，请在设置中查看。")); }
         if account.is_legacy() {
             self.ensure_legacy_ticket(account).await?;
@@ -178,8 +158,9 @@ impl LaunchCoordinator {
         }
         crate::account::validate_input(&identifier, &password)?;
         crate::account::validate_login_uid(&identifier)?;
+        let adapter=self.adapter.clone().ok_or(error("adapter_not_configured", "未配置客户端适配器。"))?;
         let dir = directory.clone();
-        let report = tokio::task::spawn_blocking(move || client::inspect(&dir))
+        let report = tokio::task::spawn_blocking(move || client::inspect_with_profile(&dir, &adapter))
             .await
             .map_err(|_| error("inspection_failed", "客户端检查失败。"))??;
         if !report.ready {
@@ -235,8 +216,9 @@ impl LaunchCoordinator {
         Ok(ticket)
     }
     fn spawn_ticket(&self, directory: &str, ticket: Ticket, now:u64) -> Result<LaunchResult> {
-        let exe = client::executable(directory)?;
-        let args = arguments_for(&ticket, now, self.endpoint.as_ref())?;
+        let adapter=self.adapter.as_ref().ok_or(error("adapter_not_configured", "未配置客户端适配器。"))?;
+        let exe = client::executable_with_profile(directory,adapter)?;
+        let args = arguments_for(&ticket, now, self.endpoint.as_ref(),adapter)?;
         let child = spawn(&exe, &args)?;
         let pid = child.id();
         *self
@@ -250,10 +232,10 @@ impl LaunchCoordinator {
         })
     }
 }
-fn spawn(exe: &Path, args: &str) -> Result<Child> {
+fn spawn(exe: &Path, args: &[String]) -> Result<Child> {
     // Direct process invocation, one argument, no cmd.exe and no batch execution.
     Command::new(exe)
-        .arg(args)
+        .args(args)
         .current_dir(
             exe.parent()
                 .ok_or(error("invalid_directory", "客户端目录无效。"))?,
@@ -282,13 +264,13 @@ mod tests {
         *c.pending_legacy.lock().unwrap()=Some(Ticket{uid:"10000001".into(),token:Zeroizing::new("fixture_only".into()),expires:unix_now()+60});
         c.logout(&account).await.unwrap();assert!(c.pending_legacy.lock().unwrap().is_none());assert!(c.child.lock().unwrap().is_none());
     }
-    #[test] fn configured_endpoint_changes_only_host_and_port() {
-        let config=crate::public_config::PublicConfig::parse(include_bytes!("../fixtures/public-config.json")).unwrap();
-        let coordinator=LaunchCoordinator::configured(&config).unwrap();
-        let ticket=Ticket{uid:"00000001".into(),token:Zeroizing::new("fixture_token".into()),expires:2000};
-        let actual=arguments_for(&ticket,1000,coordinator.endpoint.as_ref()).unwrap();
-        let original=arguments(&ticket,1000).unwrap();
-        assert_eq!(*actual,original.replacen("203.0.113.10?7001","game.example.com?17001",1));
+    #[test] fn configured_adapter_renders_separate_arguments() {
+        let c=crate::public_config::PublicConfig::parse(include_bytes!("../fixtures/public-config.json")).unwrap();
+        let coordinator=LaunchCoordinator::configured(&c).unwrap();
+        let ticket=Ticket{uid:"account_42".into(),token:Zeroizing::new("fixture_token".into()),expires:2000};
+        let args=arguments_for(&ticket,1000,coordinator.endpoint.as_ref(),coordinator.adapter.as_ref().unwrap()).unwrap();
+        assert_eq!(*args,vec!["--server=game.example.com:17001","--uid=account_42","--ticket=fixture_token"]);
+        assert!(arguments_for(&ticket,2000,coordinator.endpoint.as_ref(),coordinator.adapter.as_ref().unwrap()).is_err());
     }
     #[tokio::test]
     async fn missing_client_fails_before_authentication_and_releases_busy_guard() {
@@ -304,7 +286,7 @@ mod tests {
                     Zeroizing::new("fixture-only".into()),
                 )
                 .await;
-            assert_eq!(result.err().unwrap().code, "client_not_ready");
+            assert_eq!(result.err().unwrap().code, "adapter_not_configured");
         }
         coordinator.busy.store(true, Ordering::SeqCst);
         let result = coordinator
@@ -325,19 +307,6 @@ mod tests {
         *c.pending.lock().unwrap()=Some(Session {uid:"12345678".into(),token:Zeroizing::new("YWJj".into()),expires:0});
         assert_eq!(c.start_authenticated(&account,String::new()).await.err().unwrap().code,"token_expired");
         assert!(c.pending.lock().unwrap().is_none());
-    }
-    #[test]
-    fn preserves_empty_fields_and_uses_returned_uid() {
-        let t = Ticket {
-            uid: "12345678".into(),
-            token: Zeroizing::new("YWJj".into()),
-            expires: 2000,
-        };
-        let a = arguments(&t, 1000).unwrap();
-        assert!(a.starts_with("9?203.0.113.10?7001?12345678?YWJj?"));
-        assert!(a.contains("?2?1???0?0?0?"));
-        assert!(a.ends_with("?4D87"));
-        assert!(arguments(&t, 2000).is_err());
     }
     #[tokio::test]
     async fn second_launch_reuses_the_remembered_credential_instead_of_asking_again() {
@@ -381,7 +350,7 @@ mod tests {
     }
     #[test]
     fn spawn_failure_is_generic_and_has_no_credential() {
-        let e = spawn(Path::new("Z:/__oo_missing__/DNF.exe"), "secret-token").unwrap_err();
+        let e = spawn(Path::new("Z:/__oo_missing__/DNF.exe"), &["secret-token".into()]).unwrap_err();
         assert_eq!(e.code, "launch_failed");
         assert!(!e.message.contains("secret-token"));
     }

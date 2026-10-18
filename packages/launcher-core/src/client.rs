@@ -7,20 +7,45 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Profile {
     pub id: String,
     pub version_id: String,
+    pub executable: String,
+    pub machine: String,
     pub executable_sha256: String,
-    pub game_host: String,
-    pub game_port: u16,
-    pub argument_prefix: String,
-    pub argument_suffix: String,
+    pub arguments: Vec<String>,
+    #[serde(default)] pub required_files: Vec<String>,
+    #[serde(default)] pub required_directories: Vec<String>,
 }
-pub fn profile() -> Profile {
-    serde_json::from_str(include_str!("../../../adapters/s4a21/profile.json"))
-        .expect("compiled adapter profile")
+fn valid_name(s: &str) -> bool {
+    !s.is_empty() && s.len() <= 240 && s != "." && s != ".."
+        && !s.ends_with(['.', ' ']) && !s.chars().any(|c| c.is_control() || "\\/:*?\"<>|".contains(c))
+}
+impl Profile {
+    pub fn validate(&self) -> Result<()> {
+        let invalid = || error("adapter_invalid", "适配器配置无效，请联系服主。 ");
+        if self.id.is_empty() || self.id.len()>80 || !self.id.bytes().all(|b| b.is_ascii_alphanumeric() || b==b'-')
+            || self.version_id.is_empty() || self.version_id.len()>80
+            || !valid_name(&self.executable) || !self.executable.to_ascii_lowercase().ends_with(".exe")
+            || !matches!(self.machine.as_str(), "x86" | "x64")
+            || self.executable_sha256.len()!=64 || !self.executable_sha256.bytes().all(|b| b.is_ascii_hexdigit())
+            || self.arguments.is_empty() || self.arguments.len()>64
+            || self.required_files.len()>128 || self.required_directories.len()>128
+            || self.required_files.iter().chain(&self.required_directories).any(|s| !valid_name(s)) { return Err(invalid()); }
+        for argument in &self.arguments {
+            let mut literal=argument.clone();
+            for key in ["{host}","{port}","{uid}","{token}"] { literal=literal.replace(key, ""); }
+            if argument.len()>4096 || argument.chars().any(char::is_control) || literal.contains(['{','}']) {return Err(invalid());}
+        }
+        Ok(())
+    }
+}
+pub fn profile() -> Result<Profile> {
+    let exe=std::env::current_exe().map_err(|_|error("adapter_not_configured", "未配置客户端适配器。"))?;
+    let config=crate::public_config::PublicConfig::load(exe.parent().ok_or(error("adapter_not_configured", "未配置客户端适配器。"))?)?;
+    config.map(|c|c.client_adapter).ok_or(error("adapter_not_configured", "请在 launcher.public.json 中配置 clientAdapter。"))
 }
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -64,7 +89,7 @@ fn safe_file(root: &Path, relative: &str) -> Result<PathBuf> {
     }
     Ok(p)
 }
-fn x86_file(path: &Path) -> bool {
+fn pe_file(path: &Path, machine: &str) -> bool {
     let Ok(mut f) = File::open(path) else {
         return false;
     };
@@ -77,7 +102,7 @@ fn x86_file(path: &Path) -> bool {
     f.seek(SeekFrom::Start(offset)).is_ok()
         && f.read_exact(&mut pe).is_ok()
         && &pe[..4] == b"PE\0\0"
-        && u16::from_le_bytes([pe[4], pe[5]]) == 0x14c
+        && u16::from_le_bytes([pe[4], pe[5]]) == if machine == "x64" {0x8664} else {0x14c}
 }
 pub fn sha256_file(path: &Path) -> Result<String> {
     let mut f = File::open(path).map_err(|_| error("file_read", "无法读取客户端文件。"))?;
@@ -94,117 +119,43 @@ pub fn sha256_file(path: &Path) -> Result<String> {
     }
     Ok(format!("{:x}", hasher.finalize()))
 }
-pub fn inspect(directory: &str) -> Result<ClientReport> {
-    inspect_for_hash(directory,&profile().executable_sha256)
+pub fn inspect(directory: &str) -> Result<ClientReport> { inspect_with_profile(directory, &profile()?) }
+pub fn inspect_with_profile(directory: &str, profile: &Profile) -> Result<ClientReport> {
+    profile.validate()?;
+    let root=Path::new(directory.trim());
+    if !root.is_absolute() || !root.is_dir() {return Err(error("invalid_directory", "请选择客户端目录。"));}
+    let root=root.canonicalize().map_err(|_|error("invalid_directory", "无法访问客户端目录。"))?;
+    let mut items=Vec::new();
+    let exe=safe_file(&root, &profile.executable);
+    let ok=exe.as_ref().is_ok_and(|p| pe_file(p, &profile.machine) && sha256_file(p).is_ok_and(|h| h.eq_ignore_ascii_case(&profile.executable_sha256)));
+    items.push(CheckItem{name:profile.executable.clone(),ok,detail:if ok {format!("匹配适配器 {} / {}",profile.id,profile.machine)} else {"主程序缺失、架构或指纹不匹配".into()}});
+    for name in &profile.required_files {
+        let ok=safe_file(&root,name).is_ok_and(|p| p.metadata().is_ok_and(|m| m.len()>0));
+        items.push(CheckItem{name:name.clone(),ok,detail:"适配器要求的非空文件".into()});
+    }
+    for name in &profile.required_directories {
+        let ok=root.join(name).canonicalize().is_ok_and(|p|p.starts_with(&root)&&p.is_dir());
+        items.push(CheckItem{name:name.clone(),ok,detail:"适配器要求的资源目录".into()});
+    }
+    Ok(ClientReport{directory:directory.trim().into(),ready:items.iter().all(|i|i.ok),items,note:NOTE,warnings:Vec::new()})
 }
-fn inspect_for_hash(directory:&str,expected_sha:&str)->Result<ClientReport>{
-    let root = Path::new(directory.trim());
-    if !root.is_absolute() || !root.is_dir() {
-        return Err(error(
-            "invalid_directory",
-            "请选择包含 DNF.exe 的客户端目录。",
-        ));
-    }
-    let root = root
-        .canonicalize()
-        .map_err(|_| error("invalid_directory", "无法访问客户端目录。"))?;
-    let mut items = Vec::new();
-    for name in ["DNF.exe", "az.dll", "ijl15.dll", "GameGaurd.dll"] {
-        let ok = safe_file(&root, name).is_ok_and(|p| x86_file(&p));
-        items.push(CheckItem {
-            name: name.into(),
-            ok,
-            detail: if ok {
-                "x86 文件可读取"
-            } else {
-                "缺失、路径异常或不是 x86 PE 文件"
-            }
-            .into(),
-        });
-    }
-    let fingerprint = safe_file(&root, "DNF.exe").and_then(|p| sha256_file(&p));
-    let matched = fingerprint
-        .as_ref()
-        .is_ok_and(|h| h == expected_sha);
-    items.push(CheckItem {
-        name: "客户端版本".into(),
-        ok: matched,
-        detail: if matched {
-            "匹配已记录的 S4A21_CN 主程序"
-        } else {
-            "主程序指纹不匹配，当前启动模板不可用"
-        }
-        .into(),
-    });
-    let pvf = safe_file(&root, "Script.pvf").is_ok_and(|p| p.metadata().is_ok_and(|m| m.len() > 0));
-    items.push(CheckItem {
-        name: "Script.pvf".into(),
-        ok: pvf,
-        detail: if pvf {
-            "存在且非空（未验证发布签名）"
-        } else {
-            "文件缺失或为空"
-        }
-        .into(),
-    });
-    for name in ["ImagePacks2", "SoundPacks"] {
-        let ok = root
-            .join(name)
-            .canonicalize()
-            .is_ok_and(|p| p.starts_with(&root) && p.is_dir());
-        items.push(CheckItem {
-            name: name.into(),
-            ok,
-            detail: if ok {
-                "资源目录存在"
-            } else {
-                "资源目录缺失或指向目录外"
-            }
-            .into(),
-        });
-    }
-    // GameGaurd.ini 属于玩家/客户端自有配置：启动器不检测、不读取、不解析、不展示，
-    // 也不据其检查插件 DLL。文件是否存在都与启动条件无关。
-    let warnings=Vec::new();
-    Ok(ClientReport {
-        directory: directory.trim().into(),
-        ready: items.iter().all(|i| i.ok),
-        items,
-        note: NOTE,
-        warnings,
-    })
-}
-pub fn executable(directory: &str) -> Result<PathBuf> {
-    let root = Path::new(directory)
-        .canonicalize()
-        .map_err(|_| error("invalid_directory", "无法访问客户端目录。"))?;
-    safe_file(&root, "DNF.exe")
+pub fn executable_with_profile(directory:&str, profile:&Profile)->Result<PathBuf> {
+    profile.validate()?;
+    let root=Path::new(directory).canonicalize().map_err(|_|error("invalid_directory", "无法访问客户端目录。"))?;
+    safe_file(&root, &profile.executable)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use std::fs;
-    #[test] fn original_archive_is_ready_but_required_integrity_is_enforced(){
-        let d=tempfile::tempdir().unwrap();let root=d.path();let mut exe=vec![0u8;2048];exe[..2].copy_from_slice(b"MZ");exe[60..64].copy_from_slice(&128u32.to_le_bytes());exe[128..134].copy_from_slice(b"PE\0\0\x4c\x01");
-        for name in ["DNF.exe","az.dll","ijl15.dll","GameGaurd.dll"]{fs::write(root.join(name),&exe).unwrap();}
-        fs::write(root.join("Script.pvf"),b"fixture never executed").unwrap();for name in ["ImagePacks2","SoundPacks"]{fs::create_dir(root.join(name)).unwrap();}
-        let sha=sha256_file(&root.join("DNF.exe")).unwrap();let report=inspect_for_hash(root.to_str().unwrap(),&sha).unwrap();assert!(report.ready);assert!(report.warnings.is_empty());assert!(!root.join("GameGaurd.ini").exists());
-        fs::remove_file(root.join("GameGaurd.dll")).unwrap();assert!(!inspect_for_hash(root.to_str().unwrap(),&sha).unwrap().ready);fs::write(root.join("GameGaurd.dll"),&exe).unwrap();exe[1000]=1;fs::write(root.join("DNF.exe"),exe).unwrap();assert!(!inspect_for_hash(root.to_str().unwrap(),&sha).unwrap().ready);
-    }
-    #[test]
-    fn empty_directory_is_not_ready() {
-        let d = tempfile::tempdir().unwrap();
-        let r = inspect(d.path().to_str().unwrap()).unwrap();
-        assert!(!r.ready);
-        assert!(r.items.iter().any(|i| i.name == "DNF.exe" && !i.ok));
-    }
-    #[test]
-    fn file_escape_and_truncated_pe_rejected() {
-        let d = tempfile::tempdir().unwrap();
-        assert!(safe_file(d.path(), "..\\other.dll").is_err());
-        let p = d.path().join("DNF.exe");
-        fs::write(&p, b"MZ").unwrap();
-        assert!(!x86_file(&p));
-    }
+ use super::*;
+ #[test] fn arbitrary_x64_client_and_required_resources() {
+    let d=tempfile::tempdir().unwrap(); let mut exe=vec![0u8;256]; exe[..2].copy_from_slice(b"MZ"); exe[60..64].copy_from_slice(&128u32.to_le_bytes()); exe[128..134].copy_from_slice(b"PE\0\0\x64\x86");
+    std::fs::write(d.path().join("OtherGame.exe"), &exe).unwrap();
+    let mut p=Profile{id:"other-client".into(),version_id:"115".into(),executable:"OtherGame.exe".into(),machine:"x64".into(),executable_sha256:sha256_file(&d.path().join("OtherGame.exe")).unwrap(),arguments:vec!["{uid}".into()],required_files:vec![],required_directories:vec![]};
+    assert!(inspect_with_profile(d.path().to_str().unwrap(), &p).unwrap().ready);
+    p.machine="x86".into(); assert!(!inspect_with_profile(d.path().to_str().unwrap(), &p).unwrap().ready);
+    p.machine="x64".into();p.required_files.push("payload.pvf".into());assert!(!inspect_with_profile(d.path().to_str().unwrap(), &p).unwrap().ready);
+    p.executable="../escape.exe".into();assert!(p.validate().is_err());
+ }
+ #[test] fn rejects_unknown_placeholders() {let mut p=crate::public_config::PublicConfig::parse(include_bytes!("../fixtures/public-config.json")).unwrap().client_adapter;p.arguments=vec!["{password}".into()];assert!(p.validate().is_err());}
 }

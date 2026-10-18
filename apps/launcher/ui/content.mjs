@@ -1,4 +1,4 @@
-export function mountContent(invoke,realm='s4a21'){
+export function mountContent(invoke,realm=''){
  const $=id=>document.getElementById(id);if(!$('content-items'))return;
  let snapshot=null,loadedAt=0,stale=true,busy=false,category='all',lastAttempt=0;
  function render(){

@@ -19,6 +19,15 @@ const legacyOnline=bootInfo?.accountMode==='legacy-online';
 document.documentElement.dataset.edition=edition;
 const {markup}=await import('./modern.mjs');
 $('edition').innerHTML=markup;
+if(!platformIdentity){
+ const config=bootInfo?.publicConfig, version=config?.clientAdapter?.versionId;
+ const label=config?.realmName||'未配置服务器';
+ $('select-server').textContent=label;
+ document.querySelector('.town-feature small').textContent=version||'通用客户端';
+ const grid=document.querySelector('.server-grid');
+ if(grid){grid.replaceChildren();const text=document.createElement('p');text.textContent=config?label+' · '+(version||config.adapterId):'请先配置服主提供的服务器与客户端适配器';grid.append(text);}
+}
+
 if(platformIdentity){
  document.documentElement.dataset.accountMode='platform';document.querySelector('.town-feature small').textContent='115US';$('select-server').textContent='115US';for(const choice of document.querySelectorAll('#server-dialog input[name=server]')){choice.checked=choice.value==='115us';choice.disabled=choice.value!=='115us';}const author=document.createElement('small');author.className='launcher-author';author.textContent='by zkonikishi';document.querySelector('.modern-stage').append(author);
  $('directory').placeholder='选择包含 DFO.exe 的 115US 客户端目录';for(const id of ['manual-client-download','check-client-update','download-client','pause-client-download'])$(id).hidden=true;$('client-download-state').textContent='请选择已有的 115US 客户端目录。';
@@ -44,7 +53,7 @@ window.__TAURI__?.event?.listen("game-exited",()=>music.resumeAfterGame());
 if(edition==='modern'){
   const {mountScene}=await import('./scene.mjs');
   mountScene(document.querySelector('.modern-stage'));
-  const {mountContent}=await import('./content.mjs');mountContent(invoke,bootInfo?.publicConfig?.realmId==='hk'?'s4a21':(bootInfo?.publicConfig?.realmId||'s4a21'));
+  const {mountContent}=await import('./content.mjs');mountContent(invoke,bootInfo?.publicConfig?.realmId||bootInfo?.genericProfile?.target?.realmId||'');
 }
 function status(message,kind='neutral'){$('status').textContent=message;$('status-dot').dataset.kind=kind;}
 function setBusy(value){busy=value;$('login-fields').disabled=value;for(const id of ['choose','save','inspect','probe','check-client-update','download-client','recover-uid-open'])$(id).disabled=value||(id==='choose'&&!!bootInfo?.publicConfig);$('launch').querySelector('span').textContent=value?'处理中…':edition==='retro'?'开始游戏':'登录';}

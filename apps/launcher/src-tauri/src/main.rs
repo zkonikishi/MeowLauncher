@@ -115,7 +115,7 @@ fn bootstrap(state: State<AppState>) -> Bootstrap {
         settings,
         warning,
         version: env!("CARGO_PKG_VERSION"),
-        profile_id: if state.platform.is_some(){"115us".into()}else{client::profile().id},
+        profile_id: if state.platform.is_some(){"115us".into()}else{state.public_config.as_ref().map(|c|c.adapter_id.clone()).unwrap_or_default()},
         data_directory: state.data.display().to_string(),
     }
 }
@@ -717,7 +717,7 @@ fn main() {
         }
     };
     let brand=public_config.as_ref().map(|c|c.brand.clone()).unwrap_or_else(||"Meowopia".into());
-    let platform=if !cfg!(feature="legacy-online"){Some(meow_launcher_core::platform_identity::Client::new("https://launcher.invalid").expect("fixed HTTPS platform origin"))}else{None};
+    let platform=if meow_launcher_core::edition::is_custom() && !cfg!(feature="legacy-online"){Some(meow_launcher_core::platform_identity::Client::new("https://launcher.invalid").expect("fixed HTTPS platform origin"))}else{None};
     // 更新源：服主显式配置优先；定制版没有配置时用编译期固定的官网地址；
     // 通用版没有配置就留空，检查更新会明确提示未配置。
     let update_base=match public_config.as_ref().and_then(|c|c.update_base()) {

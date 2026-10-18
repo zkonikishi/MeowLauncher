@@ -9,23 +9,24 @@ const STATE:&str=".oo-client-installed.json";
 fn io_error()->crate::AppError{error("client_update_io","客户端文件操作失败；请确认目录可写及剩余空间。")}
 fn invalid()->crate::AppError{error("client_manifest_invalid","客户端下载清单、路径或可信来源不符合要求。")}
 #[derive(Clone)]
-pub struct Source {edition:String,realm:String,adapter:String,manifest_url:String,artifact_prefix:String,fixture:bool}
+pub struct Source {edition:String,realm:String,adapter:String,manifest_url:String,artifact_prefix:String,profile:Option<crate::client::Profile>,fixture:bool}
 impl Source {
  pub fn new(edition:&str,realm:&str,adapter:&str,manifest_url:&str,artifact_prefix:&str)->Result<Self>{
   for value in [edition,realm,adapter]{if value.is_empty()||value.len()>80||!value.bytes().all(|c|c.is_ascii_alphanumeric()||c==b'-'){return Err(invalid());}}
   for value in [manifest_url,artifact_prefix]{let u=reqwest::Url::parse(value).map_err(|_|invalid())?;if u.scheme()!="https"||u.host_str().is_none()||!u.username().is_empty()||u.password().is_some()||u.query().is_some()||u.fragment().is_some(){return Err(invalid());}}
   if !artifact_prefix.ends_with('/') {return Err(invalid());}
   let m=reqwest::Url::parse(manifest_url).map_err(|_|invalid())?;let a=reqwest::Url::parse(artifact_prefix).map_err(|_|invalid())?;if m.origin()!=a.origin(){return Err(invalid());}
-  Ok(Self{edition:edition.into(),realm:realm.into(),adapter:adapter.into(),manifest_url:manifest_url.into(),artifact_prefix:artifact_prefix.into(),fixture:false})
+  Ok(Self{edition:edition.into(),realm:realm.into(),adapter:adapter.into(),manifest_url:manifest_url.into(),artifact_prefix:artifact_prefix.into(),profile:None,fixture:false})
  }
- pub fn meowopia()->Self{Self::new("meowopia-custom","s4a21",&crate::client::profile().id,"https://launcher.invalid/launcher/client/meowopia-custom/s4a21/manifest.json","https://launcher.invalid/launcher/client/meowopia-custom/s4a21/releases/").expect("compiled client provider")}
+ pub fn meowopia()->Self{Self::unconfigured()}
  /// 没有配置客户端下载源的发行版：清单与资产地址都为空的占位源，任何下载都会
  /// 明确报“尚未配置”，而不是退回到某个默认站点。
- pub fn unconfigured()->Self{Self{edition:String::new(),realm:String::new(),adapter:String::new(),manifest_url:String::new(),artifact_prefix:String::new(),fixture:false}}
+ pub fn unconfigured()->Self{Self{edition:String::new(),realm:String::new(),adapter:String::new(),manifest_url:String::new(),artifact_prefix:String::new(),profile:None,fixture:false}}
+ pub fn with_profile(mut self, profile:crate::client::Profile)->Result<Self>{profile.validate()?;if profile.id!=self.adapter{return Err(invalid());}self.profile=Some(profile);Ok(self)}
  pub fn configured(&self)->bool{!self.manifest_url.is_empty()}
  fn client(&self)->Result<reqwest::Client>{reqwest::Client::builder().https_only(!self.fixture).no_proxy().redirect(reqwest::redirect::Policy::none()).connect_timeout(Duration::from_secs(10)).read_timeout(Duration::from_secs(30)).build().map_err(|_|io_error())}
- fn trusted(&self,value:&str)->bool{value.starts_with(&self.artifact_prefix)&&reqwest::Url::parse(value).is_ok_and(|u|u.as_str()==value&&u.query().is_none()&&u.fragment().is_none()&&u.username().is_empty()&&u.password().is_none()&&!u.path().contains('%'))}
- #[cfg(test)] fn fixture(origin:&str,name:&str)->Self{Self{edition:"fixture".into(),realm:"s4a21".into(),adapter:"fixture-a21".into(),manifest_url:format!("{origin}/manifests/{name}.json"),artifact_prefix:format!("{origin}/files/"),fixture:true}}
+ fn trusted(&self,value:&str)->bool{self.configured()&&value.starts_with(&self.artifact_prefix)&&reqwest::Url::parse(value).is_ok_and(|u|u.as_str()==value&&u.query().is_none()&&u.fragment().is_none()&&u.username().is_empty()&&u.password().is_none()&&!u.path().contains('%'))}
+ #[cfg(test)] fn fixture(origin:&str,name:&str)->Self{Self{edition:"fixture".into(),realm:"s4a21".into(),adapter:"fixture-a21".into(),manifest_url:format!("{origin}/manifests/{name}.json"),artifact_prefix:format!("{origin}/files/"),profile:None,fixture:true}}
 }
 #[derive(Clone,Deserialize,Serialize)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
@@ -58,8 +59,13 @@ fn validate(source:&Source,manifest:&Manifest)->Result<()> {
  if let Some(a)=&manifest.archive{if !source.trusted(&a.url)||a.size==0||a.size>68719476736||!hash_valid(&a.sha256){return Err(invalid());}}
  if let Some(prefix)=&manifest.archive_root{safe_relative(prefix)?;if manifest.archive.is_none(){return Err(invalid());}}
  if manifest.archive.is_none()&&manifest.files.iter().any(|f|f.url.is_none()){return Err(invalid());}
- if !source.fixture {for required in ["DNF.exe","az.dll","ijl15.dll","GameGaurd.dll","Script.pvf"]{if !manifest.files.iter().any(|f|f.path==required){return Err(invalid());}}for folder in ["ImagePacks2/","SoundPacks/"]{if !manifest.files.iter().any(|f|f.path.starts_with(folder)){return Err(invalid());}}}
- if !source.fixture&&!manifest.files.iter().any(|f|f.path=="DNF.exe"&&f.sha256.eq_ignore_ascii_case(&crate::client::profile().executable_sha256)){return Err(error("client_adapter_mismatch","下载清单的游戏主程序版本与启动器适配不一致。"));}Ok(())
+ if !source.fixture {
+    let p=source.profile.as_ref().ok_or(error("adapter_not_configured","下载源未绑定客户端适配器。"))?;
+    if p.id!=source.adapter {return Err(invalid());}
+    for required in &p.required_files {if !manifest.files.iter().any(|f|&f.path==required){return Err(invalid());}}
+    for folder in &p.required_directories {if !manifest.files.iter().any(|f|f.path.starts_with(&format!("{folder}/"))){return Err(invalid());}}
+    if !manifest.files.iter().any(|f|f.path==p.executable&&f.sha256.eq_ignore_ascii_case(&p.executable_sha256)){return Err(error("client_adapter_mismatch","下载清单与所选适配器不匹配。"));}
+ } Ok(())
 }
 fn reparse(path:&Path)->bool {
  let Ok(meta)=fs::symlink_metadata(path)else{return false;};
@@ -187,7 +193,7 @@ fn rollback(root:&Path,tx:&Path,journal:&mut Journal)->Result<()> {
 fn recover(root:&Path,work:&Path,source:&Source)->Result<()> {for entry in fs::read_dir(work).map_err(|_|io_error())?{let entry=entry.map_err(|_|io_error())?;let name=entry.file_name().to_string_lossy().into_owned();if !hash_valid(&name){continue;}if reparse(&entry.path()){return Err(invalid());}let path=entry.path().join("journal.json");if !path.exists(){continue;}if reparse(&path){return Err(invalid());}let mut journal:Journal=serde_json::from_slice(&read_limited(&path,33554432)?).map_err(|_|invalid())?;if journal.schema!=1||!journal.backup_dir.starts_with("backup-")||journal.backup_dir.len()>80||!journal.backup_dir.bytes().all(|b|b.is_ascii_alphanumeric()||b==b'-')||journal.edition!=source.edition||journal.realm!=source.realm||journal.adapter!=source.adapter||journal.changes.len()>50000{return Err(invalid());}for c in &journal.changes{safe_relative(&c.path)?;if c.old.as_ref().is_some_and(|v|!hash_valid(v))||c.new.as_ref().is_some_and(|v|!hash_valid(v)){return Err(invalid());}}if journal.status=="committing"{rollback(root,&entry.path(),&mut journal)?;}}Ok(())}
 
 pub fn game_running()->Result<bool>{
- #[cfg(windows)]{use std::os::windows::process::CommandExt;let path=PathBuf::from(std::env::var_os("SystemRoot").ok_or_else(io_error)?).join("System32/tasklist.exe");let output=std::process::Command::new(path).args(["/FI","IMAGENAME eq DNF.exe","/FO","CSV","/NH"]).creation_flags(0x08000000).output().map_err(|_|error("game_check_failed","无法检查游戏进程，请稍后重试。"))?;if !output.status.success(){return Err(error("game_check_failed","无法确认游戏是否已退出。"));}Ok(String::from_utf8_lossy(&output.stdout).to_ascii_lowercase().contains("\"dnf.exe\""))}
+ #[cfg(windows)]{use std::os::windows::process::CommandExt;let executable=crate::client::profile()?.executable;let filter=format!("IMAGENAME eq {executable}");let expected=format!("\"{}\"",executable.to_ascii_lowercase());let path=PathBuf::from(std::env::var_os("SystemRoot").ok_or_else(io_error)?).join("System32/tasklist.exe");let output=std::process::Command::new(path).args(["/FI",filter.as_str(),"/FO","CSV","/NH"]).creation_flags(0x08000000).output().map_err(|_|error("game_check_failed","无法检查游戏进程，请稍后重试。"))?;if !output.status.success(){return Err(error("game_check_failed","无法确认游戏是否已退出。"));}Ok(String::from_utf8_lossy(&output.stdout).to_ascii_lowercase().contains(&expected))}
  #[cfg(not(windows))]{Err(error("game_check_failed","当前平台不支持游戏进程核验。"))}
 }
 #[cfg(test)]#[path="distribution_tests.rs"]mod tests;
