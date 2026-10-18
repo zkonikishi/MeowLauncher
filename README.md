@@ -6,7 +6,8 @@
 
 ## 分支
 
-- `main`：Electron / React 主线。现有源码包含早期26.1.0历史基线，不代表最新本地候选已同步。
+- `Electron`：Electron / React 开发主线。现有源码包含早期26.1.0历史基线，不代表最新本地候选已同步。
+- `main`：保留原入口；后续 Electron 开发以 `Electron` 分支为准。
 - `Tauri`：保留此前已脱敏公开的通用版 Rust / Tauri 2 源码，不能当作Max自定义版。
 
 ## 开发版本
