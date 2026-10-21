@@ -176,3 +176,21 @@ html:is([data-account-mode=simple],[data-account-mode=platform]) .settings-brand
 .account-links>button:not([hidden])~button:not([hidden])::before{content:"·";display:inline-block;margin-right:14px;color:#818683}
 
 .settings-body input[type=file]::file-selector-button{border:1px solid #ffffff20;border-radius:22px;background:#ffffff0b;color:#ddd;padding:7px 14px;margin-right:12px;font:inherit;cursor:pointer}
+
+/* One viewport policy for login, lobby and every overlay, including high DPI. */
+html[data-edition=modern] dialog{max-width:calc(100vw - 40px);max-height:calc(100vh - 40px)}
+html[data-edition=modern] .settings-layout{height:calc(100% - 64px);min-height:0}
+html[data-edition=modern] .settings-body{min-height:0;overflow:auto}
+@media(max-height:600px){
+ .modern-stage .modern-login{top:12%;height:80%;min-height:0;padding:16px 20px;overflow-y:auto;scrollbar-width:thin}
+ .modern-stage .modern-login .account-emblem{height:42px;margin:0 auto 6px}
+ .modern-stage .modern-login .account-emblem img{height:50px;width:62px}
+ .modern-login h1{margin-bottom:10px;font-size:16px}
+ .modern-stage .modern-login input:not([type=checkbox]){height:38px}
+ .modern-login .remember{margin:10px 0 12px}
+ .modern-stage .login-primary{height:42px;font-size:16px}
+ .modern-login .home-link{margin-top:10px}
+ .news-panel>img{height:115px}.news-panel nav{gap:16px;padding:8px 16px}.news-copy{padding:4px 16px 8px}.news-copy p{margin:8px 0}
+ .modern-stage .window-controls{gap:6px}.modern-stage .window-controls #account-menu-toggle{min-width:64px}
+ .settings-layout{grid-template-columns:130px minmax(0,1fr)}
+}

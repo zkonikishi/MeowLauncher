@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {reviewConfig} from '../apps/launcher/ui/generic-settings.mjs';
+const base={playerTargetFile:'D:/owner/player-target.json'};
+assert.equal(reviewConfig(base).useBundledHost,true);
+assert.equal(reviewConfig({...base,hostExecutable:'D:/ignored.exe'}).hostExecutable,'');
+assert.equal(reviewConfig({...base,readyFile:'D:/stale/ready.json'}).readyFile,'');
+assert.equal(reviewConfig({...base,allowUnsignedCandidate:false}).allowUnsignedCandidate,false);
+assert.throws(()=>reviewConfig({...base,mode:'local'}));
+assert.throws(()=>reviewConfig({...base,useBundledHost:false}));
+assert.throws(()=>reviewConfig({...base,mode:'unknown'}));
+assert.equal(reviewConfig({...base,mode:'local',readyFile:'D:/owner/ready.json'}).mode,'local');
+console.log(JSON.stringify({suite:'tauri-generic-settings',passed:8,gameStarted:false}));

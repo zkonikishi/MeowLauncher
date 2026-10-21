@@ -1,6 +1,8 @@
 # MeowLauncher Beta
 
 面向不同模拟端适配的 Windows 通用游戏启动器，使用 Rust + Tauri 2 + WebView2 构建。
+界面尺寸统一以 1920×1080 为设计基准：1280×720 画布占屏幕约三分之二；4K 屏幕整体放大为 2560×1440。窗口受工作区留边约束，WebView 按屏幕比例与系统 DPI 换算缩放；登录、大厅及所有弹窗共用此画布，不分别改变缩放。原生圆角同步按窗口比例调整。
+
 
 本仓库是 **MeowLauncher Beta（sponsor 通用版）** 的源码，默认构建目标即普通版。
 同一份源码在编译期通过 `MEOW_LAUNCHER_EDITION` 区分两种产品，编译期固定、运行时不可切换：
@@ -110,3 +112,15 @@ node --test tools/model.test.mjs
 参数支持 `{host}`、`{port}`、`{uid}`、`{token}`，每个数组元素作为独立进程参数直接传入，不执行 shell。可用一个元素兼容旧式问号分隔参数，也可使用多个命令行参数。资源要求由适配器声明；文件名限客户端根目录内，主程序架构与 SHA256 仍须匹配。适配器配置是服主选择并随发行包提供的受信配置，不从远程清单自动替换。
 
 通用版当前使用 `generic-target.json` 的认证桥与客户端宿主接口；上述发行适配器改造不等于所有认证协议或宿主 ABI 已兼容。需要新认证协议、原生桥或特殊启动方式的模拟端，仍需实现对应适配并逐端验收。目标是开放接入各种版本，不宣称已支持全部版本；本次不恢复多开、不改 Max、不发布游戏资源。
+
+## 归档候选状态（2026-10-21）
+
+作者：zkonikishi。Tauri 是 Beta 的主要开发实现，Electron 独立保存在 Electron 分支。此次为源码归档候选，不是稳定可玩发行版；内部历史版本号尚未完成新发布元数据整理。
+
+已实现 MEOWSIMPLE/1 用户名密码注册、登录和同流认证；账号配置支持 local-gateway 与可配置 HTTPS cloud-account provider。云端客户端已实现邮箱/手机挑战、注册、找回、登录以及系统浏览器第三方登录流程，秘密留在原生进程；必须由服主另行部署兼容账号桥和可信原生 grant 签发后端。本仓库没有附带可用云服务，也没有任何真实邮箱、短信、第三方平台配置或实服验收。
+
+AuthConfig 包含 schemaVersion=1、activeProvider、providers；provider 包含 id、label、connection。cloud-account.connection 包含 kind、baseUrl（HTTPS origin）、gatewayProviderId（引用 local-gateway）、methods（username-password/email-code/phone-code/third-party）。账号桥协议为 meowlauncher-account-v1，路径 /meowlauncher/v1/ 下 challenge、login、register、reset、browser/begin、browser/poll、native-grant、logout；DTO 和范围检查以 packages/launcher-core/src/cloud_account.rs 为准。第三方登录需服主的同源授权页，不能直接填写第三方 SDK 密钥到启动器。
+
+已有原生 v1 宿主链保留，v2 admission 接口仍为离线候选。账号登录不代表进入游戏成功，当前新增云端与布局未经过真实服务及 DFO 实机验证。核心测试126通过、3忽略；云端UI边界模拟10通过，不能作为实际第三方服务可用证明。
+
+Beta 使用 data/beta 保存公开配置，data 不随源码分发。待完成：详细运营部署教程、真实云服务联调、极端分辨率 WebView 缩放上限补偿、原生界面验收、统一新版本元数据和正式打包。屏幕比例算法已经编译，尚不宣称全分辨率实机验收。

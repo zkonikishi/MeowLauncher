@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "activeProvider": "local",
+  "providers": [
+    {
+      "id": "local",
+      "label": "服主网关",
+      "connection": {
+        "kind": "local-gateway",
+        "target": {
+          "host": "gateway.example.com",
+          "port": 27002,
+          "serverName": "gateway.example.com",
+          "authorityId": "my-owner",
+          "realmId": "my-realm",
+          "saveProfileId": "my-save"
+        }
+      }
+    },
+    {
+      "id": "cloud",
+      "label": "云端账号（接口预留）",
+      "connection": {
+        "kind": "cloud-account",
+        "baseUrl": "https://accounts.example.com",
+        "gatewayProviderId": "local",
+        "methods": [
+          "username-password",
+          "email-code",
+          "phone-code",
+          "third-party"
+        ]
+      }
+    }
+  ]
+}

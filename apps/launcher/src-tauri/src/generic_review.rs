@@ -11,12 +11,14 @@ const HOST_SHA:&str="dd6ac277206e5f29e24e0d5e1f332842b540d74949b73d1af3a4e722698
 const DFO_SHA:&str="b8235efe5dbf140ea4c535a026e137c4b34cfaecd7c97c78ed5997c377327c95";
 #[derive(Clone,Deserialize,Serialize)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
-pub struct Config {pub host_executable:String,pub player_target_file:String,#[serde(default)]pub ready_file:String,pub allow_unsigned_candidate:bool,#[serde(default)]pub mode:Mode}
+pub struct Config {#[serde(default)]pub use_bundled_host:bool,#[serde(default)]pub host_executable:String,pub player_target_file:String,#[serde(default)]pub ready_file:String,pub allow_unsigned_candidate:bool,#[serde(default)]pub mode:Mode}
 #[derive(Clone,Copy,Default,PartialEq,Deserialize,Serialize)]
 #[serde(rename_all="lowercase")]
 pub enum Mode {#[default]Local,Remote}
 impl Config {pub fn validate(&self)->Result<()> {
-    for value in [&self.host_executable,&self.player_target_file]{if value.len()>4096||value.contains('\0')||!Path::new(value).is_absolute(){return Err(error("client_review_config","候选验证路径必须为完整绝对路径。"));}}
+    if self.use_bundled_host && !self.host_executable.is_empty(){return Err(error("client_review_config","内置宿主模式不能同时指定其他宿主。"));}
+    let required=if self.use_bundled_host{vec![&self.player_target_file]}else{vec![&self.host_executable,&self.player_target_file]};
+    for value in required{if value.len()>4096||value.contains('\0')||!Path::new(value).is_absolute(){return Err(error("client_review_config","候选验证路径必须为完整绝对路径。"));}}
     if self.mode==Mode::Local && (self.ready_file.len()>4096||self.ready_file.contains('\0')||!Path::new(&self.ready_file).is_absolute()){return Err(error("client_review_config","本机验证需要本轮 ready.json 的完整路径。"));}
     if self.mode==Mode::Remote && !self.ready_file.is_empty(){return Err(error("client_review_config","远端验证不读取本机 ready/PID 文件，请清空 ready.json 路径。"));}
     Ok(())
@@ -84,7 +86,7 @@ async fn stop_failed(child:&mut Child,bridges:OwnedBridges){let _=child.kill().a
 
 pub async fn start(config:&Config,target:&Target,account:Arc<LoggedIn>,directory:&Path,data:&Path,window:tauri::WebviewWindow)->Result<Running> {
     config.validate()?;
-    if !config.allow_unsigned_candidate{return Err(error("client_review_unsigned","此宿主是未签名候选，默认不执行；仅在本地候选验证设置中显式启用。"));}
+    if !config.use_bundled_host && !config.allow_unsigned_candidate{return Err(error("client_review_unsigned","此宿主是未签名候选，默认不执行；仅在本地候选验证设置中显式启用。"));}
     #[cfg(windows)] {
         #[link(name="shell32")] extern "system" {fn IsUserAnAdmin()->i32;}
         if unsafe{IsUserAnAdmin()}==0{return Err(error("client_host_admin","严格客户端网络隔离需要管理员权限，请手动以管理员身份运行启动器。"));}
@@ -95,7 +97,7 @@ pub async fn start(config:&Config,target:&Target,account:Arc<LoggedIn>,directory
         Mode::Local=>{let mapping=parse_local_artifact(&raw,target)?;owner(config,target,&mapping).await?;(mapping.games,DirectoryTransport::Loopback(mapping.directory))},
         Mode::Remote=>{let mapping=parse_remote_artifact(&raw,target)?;(mapping.games,DirectoryTransport::Tls(mapping.directory))},
     };
-    let host=Path::new(&config.host_executable).canonicalize().map_err(|_|failure())?;
+    let host=if config.use_bundled_host{super::client_host_bundle::materialize(data)?}else{Path::new(&config.host_executable).canonicalize().map_err(|_|failure())?};
     let client_directory=directory.canonicalize().map_err(|_|error("client_host_integrity","请选择完整的 DFO 客户端目录。"))?;
     let launcher=std::env::current_exe().and_then(|p|p.canonicalize()).map_err(|_|failure())?;
     client_host::require_bridge_outside_client_root(&launcher,&client_directory)?;

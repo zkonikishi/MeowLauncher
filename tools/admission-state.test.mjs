@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {presentAdmission,describeAdapter} from '../apps/launcher/ui/admission-state.mjs';
+const summary={contract:'launcher-admission-v2',requestId:'request-1',phase:'binding',revision:1,pendingConfirmation:true};
+assert.equal(presentAdmission(summary,'request-1').mayRetry,false);
+assert.equal(presentAdmission({...summary,phase:'cancelling'},'request-1').kind,'busy');
+assert.throws(()=>presentAdmission(summary,'stale-request'));
+assert.throws(()=>presentAdmission({...summary,phase:'ready'},'request-1'));
+assert.equal(presentAdmission({...summary,phase:'ready',pendingConfirmation:false},'request-1').kind,'success');
+assert.equal(presentAdmission({...summary,phase:'cancelled',pendingConfirmation:false},'request-1').mayRetry,true);
+const malicious={...summary,message:'secret-ticket',ticket:'secret-ticket',code:'secret-ticket'};
+assert.ok(!JSON.stringify(presentAdmission(malicious,'request-1')).includes('secret-ticket'));
+assert.throws(()=>describeAdapter({contract:'launcher-admission-v2',edition:'max',requiresGateway:true}));
+assert.throws(()=>describeAdapter({contract:'launcher-admission-v2',edition:'sponsor',requiresGateway:false}));
+assert.match(describeAdapter({contract:'launcher-admission-v2',edition:'sponsor',requiresGateway:true,nativeAdapterReady:false}),/待接通/);
+console.log(JSON.stringify({suite:'admission-ui-summary',assertions:10,passed:true}));

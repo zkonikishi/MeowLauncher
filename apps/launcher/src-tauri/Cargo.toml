@@ -1,4 +1,5 @@
 [package]
+authors = ["zkonikishi"]
 name = "meow-launcher"
 version = "0.7.1"
 edition = "2021"

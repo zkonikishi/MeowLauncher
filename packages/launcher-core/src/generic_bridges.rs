@@ -13,15 +13,29 @@ pub struct LoggedIn {
     username:String,
     password:Zeroizing<String>,
     initial:Mutex<Option<Session>>,
+    cloud:Option<(Arc<crate::cloud_account::Client>,Arc<crate::cloud_account::Session>)>,
 }
 impl LoggedIn {
     pub async fn authenticate(target:Target,username:String,password:Zeroizing<String>)->Result<Arc<Self>> {
         let session=generic::login(&target,&username,password.clone()).await?;
-        Ok(Arc::new(Self{identity:session.identity.clone(),target,username,password,initial:Mutex::new(Some(session))}))
+        Ok(Arc::new(Self{identity:session.identity.clone(),target,username,password,cloud:None,initial:Mutex::new(Some(session))}))
+    }
+    pub async fn authenticate_cloud(target:Target,client:Arc<crate::cloud_account::Client>,account:Arc<crate::cloud_account::Session>)->Result<Arc<Self>>{
+        if &target!=client.target(){return Err(error("simple_route","云端账号与原生目标不一致。"));}
+        let grant=client.native_grant(&account).await?;let session=generic::login(&target,&grant.username,grant.password).await?;
+        if session.identity.native_account_id!=account.native_account_id{return Err(error("cloud_identity_mismatch","云端账号与网关身份不一致。"));}
+        Ok(Arc::new(Self{username:session.identity.username.clone(),identity:session.identity.clone(),target,password:Zeroizing::new(String::new()),cloud:Some((client,account)),initial:Mutex::new(Some(session))}))
+    }
+    async fn login_stream(&self,target:&Target)->Result<Session>{
+        if let Some((client,account))=&self.cloud{
+            let grant=client.native_grant(account).await?;
+            if grant.native_account_id!=self.identity.native_account_id{return Err(error("cloud_identity_mismatch","云端账号身份已改变。"));}
+            generic::login(target,&grant.username,grant.password).await
+        }else{generic::login(target,&self.username,self.password.clone()).await}
     }
     pub async fn refresh(&self)->Result<()> {
         self.initial.lock().await.take();
-        let session=generic::login(&self.target,&self.username,self.password.clone()).await?;
+        let session=self.login_stream(&self.target).await?;
         if session.identity.native_account_id!=self.identity.native_account_id || session.identity.username!=self.username {return Err(error("simple_identity_changed","账号身份已改变，请重新登录。"));}
         *self.initial.lock().await=Some(session);Ok(())
     }
@@ -31,7 +45,7 @@ impl LoggedIn {
         // A login/preflight stream may have idled while the player selected a
         // channel. Each actual game socket authenticates against its own port.
         self.initial.lock().await.take();
-        let session=generic::login(target,&self.username,self.password.clone()).await?;
+        let session=self.login_stream(target).await?;
         if session.identity.native_account_id!=self.identity.native_account_id || session.identity.username!=self.username {
             return Err(error("simple_identity_changed","频道返回了不同账号，连接已关闭。"));
         }
@@ -218,7 +232,7 @@ mod tests {
         assert!(TcpStream::connect(alias(blocked)).await.is_ok());
     }
     async fn free_port(ip:&str)->u16 {let listener=TcpListener::bind((ip,0)).await.unwrap();listener.local_addr().unwrap().port()}
-    fn fixture_account(primary:Target)->Arc<LoggedIn>{Arc::new(LoggedIn{identity:Identity{authority_id:"a".into(),realm_id:"r".into(),save_profile_id:"s".into(),connection_id:"fixture".into(),native_account_id:"1".into(),username:"Fixture".into()},target:primary,username:"Fixture".into(),password:Zeroizing::new("fixture-only".into()),initial:Mutex::new(None)})}
+    fn fixture_account(primary:Target)->Arc<LoggedIn>{Arc::new(LoggedIn{identity:Identity{authority_id:"a".into(),realm_id:"r".into(),save_profile_id:"s".into(),connection_id:"fixture".into(),native_account_id:"1".into(),username:"Fixture".into()},target:primary,username:"Fixture".into(),password:Zeroizing::new("fixture-only".into()),cloud:None,initial:Mutex::new(None)})}
     #[tokio::test] async fn failed_game_auth_never_dials_directory_and_close_releases_ports() {
         use tokio::io::AsyncReadExt;
         let directory=TcpListener::bind("127.0.0.1:0").await.unwrap();let directory_addr=directory.local_addr().unwrap();

@@ -20,6 +20,7 @@ mod generic_app;
 mod generic_review;
 mod client_host_bundle;
 mod window_shape;
+mod window_layout;
 mod game_window;
 mod client_exit;
 
@@ -686,7 +687,11 @@ fn main() {
         }
         let _ = launcher_log::event(&data, "webview2_installed");
     }
-    if meow_launcher_core::edition::is_sponsor() { generic_app::run(data); return; }
+    if meow_launcher_core::edition::is_sponsor() {
+        let package=data.parent().expect("package directory");
+        generic_app::run(meow_launcher_core::edition_data::directory(package,meow_launcher_core::launch_contract::Edition::Beta));
+        return;
+    }
     let theme_override = Some("modern".into()); // Legacy settings remain readable.
     let package_directory=data.parent().expect("package root").to_path_buf();
     let public_config=match meow_launcher_core::public_config::PublicConfig::load(&package_directory) {

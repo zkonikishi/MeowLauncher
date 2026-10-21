@@ -45,7 +45,7 @@ mod win {
             let right=left+client.right-client.left;
             let bottom=top+client.bottom-client.top;
             if right<=left || bottom<=top {return;}
-            let diameter=(40u32.saturating_mul(GetDpiForWindow(hwnd).max(96))/96) as i32;
+            let diameter=((right-left) as f64 * 40.0 / 1280.0).round().max(1.0) as i32;
             let region=CreateRoundRectRgn(left,top,right,bottom,diameter,diameter);
             let current=CreateRoundRectRgn(0,0,1,1,0,0);
             if !current.is_null(){

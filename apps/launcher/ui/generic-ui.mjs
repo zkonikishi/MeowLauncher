@@ -1,6 +1,9 @@
 import {markup} from './modern.mjs';
 import {validateSimpleCredentials,nativeAccountId} from './auth-modes.mjs';
 import {errorMessage} from './model.mjs';
+import {describeAdapter} from './admission-state.mjs';
+import {reviewConfig} from './generic-settings.mjs';
+import {mountAccountExtensions} from './cloud-auth-ui.mjs';
 const $=id=>document.getElementById(id);
 const invoke=(name,args)=>window.__TAURI__.core.invoke(name,args);
 const info=await invoke('bootstrap');
@@ -55,14 +58,19 @@ function fieldGrid(){const grid=document.createElement('div');grid.className='se
 function labeledInput(key,label,value,prefix,grid){const row=element('label','');row.className='settings-field';const caption=element('span',label),input=document.createElement('input');input.id=`${prefix}-${key}`;input.autocomplete='off';input.spellcheck=false;input.value=value;input.maxLength=key==='caCertificate'||prefix==='review'?4096:256;row.append(caption,input);grid.append(row);return input;}
 const basic=fieldGrid(),advanced=disclosure('高级连接设置','generic-advanced'),advancedGrid=fieldGrid();
 const fields=[['brand','服务器名称'],['host','服务器地址'],['port','TLS 端口'],['serverName','证书名称'],['authorityId','认证标识（Authority）'],['realmId','区服标识（Realm）'],['saveProfileId','存档标识（Profile）'],['caCertificate','信任证书路径（DER，可选）']];
-const inputs={};for(const [key,label] of fields){const value=key==='brand'?(info.genericProfile?.brand||''):(info.genericProfile?.target?.[key]??'');inputs[key]=labeledInput(key,label,value,'generic',['brand','host','port'].includes(key)?basic:advancedGrid);}
+const inputs={};for(const [key,label] of fields){const value=key==='brand'?(info.genericProfile?.brand||''):(info.effectiveTarget?.[key]??info.genericProfile?.target?.[key]??'');inputs[key]=labeledInput(key,label,value,'generic',['brand','host','port'].includes(key)?basic:advancedGrid);}
 inputs.host.placeholder='域名或 IP 地址';inputs.port.placeholder='服主提供的端口';inputs.port.inputMode='numeric';inputs.caCertificate.placeholder='选择服主提供的可信证书文件';
 advanced.body.append(element('p','以下信息由服主提供，请保持与服务端一致。'),advancedGrid);
 targetPanel.append(basic,advanced.details);
-const review=disclosure('本机联调（高级）','generic-review-options');review.body.append(element('p','仅供本机测试，默认关闭。需使用同一轮就绪文件与匹配的客户端宿主；退出启动器会关闭本次测试实例。'));
+const admissionNote=element('p','正在读取原生准入能力…');admissionNote.id='generic-admission-capability';targetPanel.append(admissionNote);
+try{admissionNote.textContent=describeAdapter(await invoke('admission_capabilities'));}catch{admissionNote.textContent='无法确认新版准入能力；保留现有网关认证，不启用未知适配器。';}
+const review=disclosure('原生游戏连接（高级）','generic-review-options');review.body.append(element('p','选择服主网关的远端频道配置，或本机同一轮就绪文件。可使用内置固定摘要宿主；退出启动器会关闭本次候选实例。'));
 const reviewGrid=fieldGrid(),reviewInputs={};for(const [key,label] of [['hostExecutable','客户端宿主路径'],['playerTargetFile','频道配置路径（player-target.json）'],['readyFile','就绪文件路径（ready.json）']]){reviewInputs[key]=labeledInput(key,label,localReview?.[key]||'','review',reviewGrid);}
+const modeSelect=document.createElement('select');modeSelect.id='review-mode';for(const [value,label] of [['remote','远端服主网关'],['local','本地宿主联调']]){const option=element('option',label);option.value=value;modeSelect.append(option);}modeSelect.value=localReview?.mode||'remote';const modeRow=element('label','连接模式');modeRow.append(modeSelect);review.body.append(modeRow);
+const bundled=element('input','');bundled.type='checkbox';bundled.id='review-bundled';bundled.checked=localReview?.useBundledHost??!localReview?.hostExecutable;const bundledRow=element('label','使用启动器内置的固定摘要宿主');bundledRow.prepend(bundled);review.body.append(bundledRow);
 review.body.append(reviewGrid);
 const consent=element('label','允许运行未签名的本机测试宿主');consent.className='settings-check';const allow=document.createElement('input');allow.type='checkbox';allow.id='review-allow';allow.checked=localReview?.allowUnsignedCandidate===true;consent.prepend(allow);review.body.append(consent);targetPanel.append(review.details);
+function reflectNativeOptions(){reviewInputs.hostExecutable.disabled=bundled.checked;reviewInputs.readyFile.closest('label').hidden=modeSelect.value==='remote';consent.hidden=bundled.checked;}bundled.onchange=reflectNativeOptions;modeSelect.onchange=reflectNativeOptions;reflectNativeOptions();
 const save=element('button','保存连接');save.id='generic-save';save.type='button';save.className='settings-primary';const actions=document.createElement('div');actions.className='settings-actions';actions.append(save);targetPanel.append(actions);
 const aboutPanel=document.querySelector('[data-settings-panel="about"]'),usage=$('edition-usage-details'),version=$('version');
 const brandCard=document.createElement('section');brandCard.className='settings-brand-card';brandCard.append(element('h3','MeowLauncher'),element('p',`通用版 · ${info.version}`));const author=element('p','作者：zkonikishi');author.id='author-credit';brandCard.append(author);
@@ -72,7 +80,7 @@ document.querySelector('[data-settings-tab="download"]').textContent='服务器�
 function tab(name){for(const panel of document.querySelectorAll('[data-settings-panel]'))panel.hidden=panel.dataset.settingsPanel!==name;for(const b of document.querySelectorAll('[data-settings-tab]'))b.classList.toggle('selected',b.dataset.settingsTab===name);}
 for(const b of document.querySelectorAll('[data-settings-tab]'))b.onclick=()=>tab(b.dataset.settingsTab);
 const settingsDialog=$('settings-dialog');$('client-shortcut').onclick=()=>settingsDialog.showModal();$('close-settings').onclick=()=>settingsDialog.close();$('home-directory').onclick=()=>{settingsDialog.showModal();tab('storage');};
-save.onclick=()=>run(async()=>{const port=Number(inputs.port.value);if(!Number.isInteger(port)||port<1||port>65535){status('请输入有效 TLS 端口。','error');return;}const target=Object.fromEntries(fields.filter(([k])=>!['brand','port'].includes(k)).map(([k])=>[k,inputs[k].value]));target.port=port;target.caCertificate=target.caCertificate||null;const review=Object.values(reviewInputs).some(i=>i.value)||allow.checked?{...Object.fromEntries(Object.entries(reviewInputs).map(([k,i])=>[k,i.value])),allowUnsignedCandidate:allow.checked}:null;await invoke('save_generic_profile',{profile:{schemaVersion:1,brand:inputs.brand.value,target,localReview:review}});localReview=review;clearSessionUI();$('select-server').textContent=inputs.brand.value;status('服务器配置已保存。登录时将校验证书和目标身份。','success');});
+save.onclick=()=>run(async()=>{const port=Number(inputs.port.value);if(!Number.isInteger(port)||port<1||port>65535){status('请输入有效 TLS 端口。','error');return;}const target=Object.fromEntries(fields.filter(([k])=>!['brand','port'].includes(k)).map(([k])=>[k,inputs[k].value]));target.port=port;target.caCertificate=target.caCertificate||null;const review=Object.values(reviewInputs).some(i=>i.value)||allow.checked?reviewConfig({...Object.fromEntries(Object.entries(reviewInputs).map(([k,i])=>[k,i.value])),mode:modeSelect.value,useBundledHost:bundled.checked,allowUnsignedCandidate:allow.checked}):null;await invoke('save_generic_profile',{profile:{schemaVersion:1,brand:inputs.brand.value,target,localReview:review}});localReview=review;clearSessionUI();$('select-server').textContent=inputs.brand.value;status('服务器配置已保存。登录时将校验证书和目标身份。','success');});
 async function saveSettings(){settings={...settings,identifier:$('remember').checked?$('identifier').value:'',rememberIdentifier:$('remember').checked,clientDirectory:$('directory').value,closeToTray:$('close-behavior').value==='tray',restoreAfterGame:$('restore-after-game').checked};settings=await invoke('save_settings',{settings});$('directory-summary').textContent=settings.clientDirectory||'尚未选择客户端目录';}
 $('close-behavior').value=settings.closeToTray===false?'exit':'tray';$('restore-after-game').checked=settings.restoreAfterGame!==false;
 for(const id of ['save','save-preferences'])$(id).onclick=()=>run(async()=>{await saveSettings();status('设置已保存。','success');});
@@ -81,7 +89,7 @@ $('login-form').onsubmit=e=>{e.preventDefault();void run(async()=>{const identif
 $('toggle-password').onclick=()=>{const show=$('password').type==='password';$('password').type=show?'text':'password';$('toggle-password').textContent=show?'隐藏':'显示';};
 $('account-menu-toggle').onclick=()=>$('account-menu').hidden=!$('account-menu').hidden;
 $('account-menu-settings').onclick=()=>{settingsDialog.showModal();$('account-menu').hidden=true;};
-$('logout-account').onclick=()=>run(async()=>{await invoke('logout_account');clearSessionUI();status('已退出账号。');});
+$('logout-account').onclick=()=>run(async()=>{const result=await invoke('logout_account');clearSessionUI();status(result?.revocationConfirmed===false?'本机已退出，云端撤销尚未确认。':'已退出账号。');});
 // Registration is native UI -> native TLS transport, never platform web forms.
 const registration=document.createElement('dialog');registration.id='generic-register';registration.setAttribute('aria-label','注册通用服务器账号');
 registration.innerHTML='<header><h2>注册账号</h2><button id="generic-register-close" type="button">关闭</button></header><form id="generic-register-form"><fieldset id="generic-register-fields"><label>用户名<input id="generic-register-user" autocomplete="username" maxlength="32"></label><label>密码<input id="generic-register-password" type="password" autocomplete="new-password" maxlength="72"></label><label>确认密码<input id="generic-register-confirm" type="password" autocomplete="new-password" maxlength="72"></label><button type="submit">注册</button></fieldset></form><p id="generic-register-state" role="status">注册目标服账号，不需要邮箱或平台 UID。</p>';
@@ -104,3 +112,5 @@ if(window.__TAURI__?.event?.listen)await window.__TAURI__.event.listen('game-exi
 try{currentRun=await invoke('current_instance');renderInstance();}catch{}
 if(info.authenticated===true&&info.identity){try{nativeAccountId(info.identity.nativeAccountId);authenticated=true;$('account-menu-toggle').textContent=info.identity.username;$('account-menu-uid').textContent=info.identity.username;}catch{authenticated=false;}}
 screen(authenticated);renderInstance();status(authenticated?'已恢复当前进程中的登录会话。':info.genericProfile?'准备就绪，请登录目标服务器。':'请先打开设置，填写服主提供的服务器连接。');
+
+mountAccountExtensions({info,invoke,panel:targetPanel,onAuthenticated(identity){nativeAccountId(identity.nativeAccountId);authenticated=true;screen(true);$('account-menu-toggle').textContent=identity.username;$('account-menu-uid').textContent=identity.username;status('账号认证已完成，游戏准入仍需目标网关校验。','success');}});
